@@ -8,8 +8,8 @@ import {
 import { auth } from "/firebase";
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
-const AVATARS = ["🎵", "🎹", "🎸", "🎧", "🎤", "🥁"];
 
+ const AVATARS = ["👩", "👨", "👧", "👦", "👱‍♀️", "👱‍♂️"];
 const MATERI_LIST = [
   { id:"ritme",    icon:"🥁", color:"#f97316", title:"Irama / Ritme", sub:"Pola ketukan dalam musik" },
   { id:"tempo",    icon:"⏱️", color:"#ec4899", title:"Tempo",         sub:"Cepat lambatnya musik" },
@@ -336,7 +336,7 @@ function LoginScreen({ onLoginSuccess }) {
   const [avatar, setAvatar] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  const AVATARS = ["🎵", "🎹", "🎸", "🎧", "🎤", "🥁"]; // Sesuaikan dengan avatar aplikasi kamu
+  const AVATARS = ["👩", "👨", "👧", "👦", "👱‍♀️", "👱‍♂️"]; // Sesuaikan dengan avatar aplikasi kamu
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -422,8 +422,13 @@ function LoginScreen({ onLoginSuccess }) {
     }}>
       <div style={{ fontSize: "3rem", marginBottom: "0.5rem" }}>🎵</div>
       <div style={{ fontFamily: "system-ui", fontSize: "1.8rem", fontWeight: 900, background: "linear-gradient(90deg,#7c3aed,#ec4899)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "0.05em", marginBottom: "0.25rem" }}>MUSIKAMI</div>
+      
+      {/* DESKRIPSI BARU UNTUK SEKOLAH DASAR / MI */}
+      <div style={{ color: "#4b5563", fontSize: "0.95rem", fontWeight: "600", fontFamily: "system-ui", marginBottom: "0.5rem", textAlign: "center" }}>
+        Aplikasi Unsur Musik untuk SD/MI
+      </div>
       <div style={{ color: "#888", fontSize: "0.85rem", marginBottom: "2rem" }}>Audio • Multimedia • Interactive</div>
-
+      
       <div style={{ background: "#fff", borderRadius: 20, padding: "1.5rem", width: "100%", maxWidth: 420, boxShadow: "0 4px 24px rgba(124,58,237,0.08)", boxSizing: "border-box" }}>
         <h2 style={{ textAlign: "center", marginBottom: "1.5rem", fontWeight: 700, fontSize: "1.2rem", color: "#333" }}>
           {isSignUp ? "Daftar Akun Baru" : "Selamat Datang Kembali!"}
@@ -499,8 +504,9 @@ function Home({ user, setTab, onOpenEksplorasi, onOpenKuis, onOpenAlatMusik }) {
         <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
           <span style={{ fontSize: "1.4rem" }}>🎵</span>
           <div>
-            <div style={{ fontWeight: 800, fontSize: "1rem" }}>MUSIKA</div>
+            <div style={{ fontWeight: 800, fontSize: "1rem" }}>MUSIKAMI</div>
             <div style={{ fontSize: "0.7rem", opacity: 0.85 }}>Musik Interaktif MI</div>
+           
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -723,11 +729,14 @@ function MateriDetail({ id, user, onBack, onCompleteMateri }) {
   );
 }
 // EKSPLORASI
-// ─── LANJUTAN EKSPLORASI PAGE (MENERUSKAN KODE KAMU YANG TERPOTONG) ──────────
+
+
 function EksplorasiPage({ onBack }) {
-  
-// Fungsi Audio Utama (Web Audio API)
-  const playSound = (freq, duration = 300, volume = 0.3) => {
+  // State untuk melacak tombol mana yang sedang aktif memutar suara
+  const [activeButton, setActiveButton] = useState(null);
+
+  // Fungsi Audio Utama (Web Audio API)
+  const playSound = (freq, duration = 300, volume = 0.3, buttonId = null) => {
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       const audioCtx = new AudioContext();
@@ -741,11 +750,21 @@ function EksplorasiPage({ onBack }) {
       oscillator.frequency.value = freq;
       gainNode.gain.value = volume;
 
+      // Aktifkan warna jika ID tombol dikirim langsung (seperti di menu Dinamika)
+      if (buttonId) {
+        setActiveButton(buttonId);
+      }
+
       oscillator.start();
 
       setTimeout(() => {
         oscillator.stop();
         audioCtx.close();
+        
+        // Matikan warna tombol setelah durasi suara habis
+        if (buttonId) {
+          setActiveButton(null);
+        }
       }, duration);
     } catch (e) {
       console.error(e);
@@ -759,11 +778,22 @@ function EksplorasiPage({ onBack }) {
     if (type === "sedang") interval = 600;
     if (type === "cepat") interval = 300;
 
+    // Nyalakan warna tombol tempo terpilih
+    const id = `tempo-${type}`;
+    setActiveButton(id);
+
     let count = 0;
     const timer = setInterval(() => {
-      playSound(600, 120);
+      playSound(600, 120, 0.3);
       count++;
-      if (count >= 4) clearInterval(timer);
+      
+      if (count >= 4) {
+        clearInterval(timer);
+        // Matikan warna tepat setelah suara ketukan keempat selesai
+        setTimeout(() => {
+          setActiveButton(null);
+        }, 120);
+      }
     }, interval);
   };
 
@@ -771,26 +801,36 @@ function EksplorasiPage({ onBack }) {
   const playIrama = (beat) => {
     let count = 0;
     let maxCount = 4;
-    if (beat === "march") maxCount = 4; // 2/4 diulang biar pas berkelanjutan
-    if (beat === "waltz") maxCount = 6; // 3/4 diulang 2x
+    if (beat === "march") maxCount = 4;  // 2/4 diulang biar pas berkelanjutan
+    if (beat === "waltz") maxCount = 6;  // 3/4 diulang 2x
     if (beat === "common") maxCount = 4; // 4/4 
+
+    // Nyalakan warna tombol irama terpilih
+    const id = `irama-${beat}`;
+    setActiveButton(id);
 
     const timer = setInterval(() => {
       if (beat === "march") {
-        playSound(count % 2 === 0 ? 700 : 400, 150);
+        playSound(count % 2 === 0 ? 700 : 400, 150, 0.3);
       } else if (beat === "waltz") {
-        playSound(count % 3 === 0 ? 700 : 400, 150);
+        playSound(count % 3 === 0 ? 700 : 400, 150, 0.3);
       } else if (beat === "common") {
-        // Pola 4/4: Ketukan 1 keras, sisanya lemah
-        playSound(count % 4 === 0 ? 700 : 400, 150);
+        playSound(count % 4 === 0 ? 700 : 400, 150, 0.3);
       }
       count++;
-      if (count >= maxCount) clearInterval(timer);
+      
+      if (count >= maxCount) {
+        clearInterval(timer);
+        // Matikan warna tepat setelah suara aksen ketukan terakhir selesai
+        setTimeout(() => {
+          setActiveButton(null);
+        }, 150);
+      }
     }, 500);
   };
 
   return (
-    <div style={{ flex: 1, overflowY: "auto", background: "#fdf8ff", fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ flex: 1, overflowY: "auto", background: "#fdf8ff", fontFamily: "system-ui, sans-serif", paddingBottom: "100px" }}>
       
       {/* HEADER UTAMA */}
       <div style={{ 
@@ -834,24 +874,44 @@ function EksplorasiPage({ onBack }) {
             ⏱️ Eksplorasi Tempo
           </div>
           
-          {/* Grid 3 Kolom Kesamping */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem" }}>
             {/* Lambat */}
-            <button onClick={() => playTempo("lambat")} style={{ ...cardStyle, background: "#eff6ff", color: "#1d4ed8" }}>
+            <button 
+              onClick={() => playTempo("lambat")} 
+              style={{ 
+                ...cardStyle, 
+                background: activeButton === "tempo-lambat" ? "#22c55e" : "#eff6ff", 
+                color: activeButton === "tempo-lambat" ? "#fff" : "#1d4ed8" 
+              }}
+            >
               <span style={{ fontSize: "1.6rem", marginBottom: "0.25rem" }}>🐢</span>
               <strong style={{ fontSize: "0.85rem" }}>Lambat</strong>
               <span style={{ fontSize: "0.72rem", opacity: 0.7, marginTop: "0.2rem" }}>Largo</span>
             </button>
 
             {/* Sedang */}
-            <button onClick={() => playTempo("sedang")} style={{ ...cardStyle, background: "#ecfdf5", color: "#047857" }}>
+            <button 
+              onClick={() => playTempo("sedang")} 
+              style={{ 
+                ...cardStyle, 
+                background: activeButton === "tempo-sedang" ? "#22c55e" : "#ecfdf5", 
+                color: activeButton === "tempo-sedang" ? "#fff" : "#047857" 
+              }}
+            >
               <span style={{ fontSize: "1.6rem", marginBottom: "0.25rem" }}>🚶</span>
               <strong style={{ fontSize: "0.85rem" }}>Sedang</strong>
               <span style={{ fontSize: "0.72rem", opacity: 0.7, marginTop: "0.2rem" }}>Moderato</span>
             </button>
 
             {/* Cepat */}
-            <button onClick={() => playTempo("cepat")} style={{ ...cardStyle, background: "#fff1f2", color: "#b91c1c" }}>
+            <button 
+              onClick={() => playTempo("cepat")} 
+              style={{ 
+                ...cardStyle, 
+                background: activeButton === "tempo-cepat" ? "#22c55e" : "#fff1f2", 
+                color: activeButton === "tempo-cepat" ? "#fff" : "#b91c1c" 
+              }}
+            >
               <span style={{ fontSize: "1.6rem", marginBottom: "0.25rem" }}>🐰</span>
               <strong style={{ fontSize: "0.85rem" }}>Cepat</strong>
               <span style={{ fontSize: "0.72rem", opacity: 0.7, marginTop: "0.2rem" }}>Allegro</span>
@@ -866,25 +926,52 @@ function EksplorasiPage({ onBack }) {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            {/* Baris Atas: Birama 2/4 dan Birama 3/4 */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-              <button onClick={() => playIrama("march")} style={{ ...cardStyle, background: "#f5f3ff", color: "#6d28d9", padding: "1rem" }}>
+              {/* Birama 2/4 */}
+              <button 
+                onClick={() => playIrama("march")} 
+                style={{ 
+                  ...cardStyle, 
+                  background: activeButton === "irama-march" ? "#22c55e" : "#f5f3ff", 
+                  color: activeButton === "irama-march" ? "#fff" : "#6d28d9", 
+                  padding: "1rem" 
+                }}
+              >
                 <span style={{ fontSize: "1.2rem", marginBottom: "0.3rem" }}>👏👏</span>
                 <strong style={{ fontSize: "0.88rem" }}>Birama 2/4</strong>
                 <span style={{ fontSize: "0.72rem", opacity: 0.7, marginTop: "0.2rem" }}>Dua ketukan</span>
               </button>
 
-              <button onClick={() => playIrama("waltz")} style={{ ...cardStyle, background: "#fdf2f8", color: "#be185d", padding: "1rem" }}>
+              {/* Birama 3/4 */}
+              <button 
+                onClick={() => playIrama("waltz")} 
+                style={{ 
+                  ...cardStyle, 
+                  background: activeButton === "irama-waltz" ? "#22c55e" : "#fdf2f8", 
+                  color: activeButton === "irama-waltz" ? "#fff" : "#be185d", 
+                  padding: "1rem" 
+                }}
+              >
                 <span style={{ fontSize: "1.2rem", marginBottom: "0.3rem" }}>👏👏👏</span>
                 <strong style={{ fontSize: "0.88rem" }}>Birama 3/4</strong>
                 <span style={{ fontSize: "0.72rem", opacity: 0.7, marginTop: "0.2rem" }}>Tiga ketukan</span>
               </button>
             </div>
 
-            {/* Baris Bawah: Birama 4/4 (Lebar Penuh) */}
-            <button onClick={() => playIrama("common")} style={{ ...cardStyle, background: "#fffbeb", color: "#b45309", padding: "1rem" }}>
-              <span style={{ fontSize: "1.2rem", marginBottom: "0.3rem" }}>👏     👏     👏     👏</span>
-              <strong style={{ fontSize: "0.88rem" }}>Birama 4/4</strong>
+            {/* Birama 4/4 */}
+            <button 
+              onClick={() => playIrama("common")} 
+              style={{ 
+                ...cardStyle, 
+                background: activeButton === "irama-common" ? "#22c55e" : "#fffbeb", 
+                color: activeButton === "irama-common" ? "#fff" : "#b45309", 
+                padding: "1rem" 
+              }}
+            >
+  
+             <span style={{ fontSize: "1.2rem", marginBottom: "0.3rem", letterSpacing: "12px" }}>
+  👏👏👏👏
+</span>  <strong style={{ fontSize: "0.88rem" }}>Birama 4/4</strong>
               <span style={{ fontSize: "0.72rem", opacity: 0.7, marginTop: "0.2rem" }}>Empat ketukan (paling umum)</span>
             </button>
           </div>
@@ -896,13 +983,31 @@ function EksplorasiPage({ onBack }) {
             🔊 Eksplorasi Dinamika
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-            <button onClick={() => playSound(440, 600, 0.05)} style={{ ...cardStyle, background: "#f8fafc", color: "#475569", border: "1px solid #e2e8f0" }}>
+            {/* Piano / Lembut */}
+            <button 
+              onClick={() => playSound(440, 600, 0.05, "dinamika-piano")} 
+              style={{ 
+                ...cardStyle, 
+                background: activeButton === "dinamika-piano" ? "#22c55e" : "#f8fafc", 
+                color: activeButton === "dinamika-piano" ? "#fff" : "#475569", 
+                border: "1px solid #e2e8f0" 
+              }}
+            >
               <span style={{ fontSize: "1.5rem" }}>🔈</span>
               <strong style={{ fontSize: "0.85rem", marginTop: "0.25rem" }}>Lembut</strong>
               <span style={{ fontSize: "0.72rem", opacity: 0.7 }}>Piano (p)</span>
             </button>
 
-            <button onClick={() => playSound(440, 600, 0.6)} style={{ ...cardStyle, background: "#fff5f5", color: "#e11d48", border: "1px solid #fee2e2" }}>
+            {/* Forte / Keras */}
+            <button 
+              onClick={() => playSound(440, 600, 0.6, "dinamika-forte")} 
+              style={{ 
+                ...cardStyle, 
+                background: activeButton === "dinamika-forte" ? "#22c55e" : "#fff5f5", 
+                color: activeButton === "dinamika-forte" ? "#fff" : "#e11d48", 
+                border: "1px solid #fee2e2" 
+              }}
+            >
               <span style={{ fontSize: "1.5rem" }}>📢</span>
               <strong style={{ fontSize: "0.85rem", marginTop: "0.25rem" }}>Keras</strong>
               <span style={{ fontSize: "0.72rem", opacity: 0.7 }}>Forte (f)</span>
@@ -915,7 +1020,7 @@ function EksplorasiPage({ onBack }) {
   );
 }
 
-// Base Style untuk Tombol Kartu agar Konsisten & Clean
+// Objek Style CSS Dasar Kartu Tombol
 const cardStyle = {
   border: "none",
   borderRadius: 16,
@@ -925,7 +1030,7 @@ const cardStyle = {
   alignItems: "center",
   justifyContent: "center",
   cursor: "pointer",
-  transition: "transform 0.1s ease, box-shadow 0.1s ease",
+  transition: "all 0.2s ease",
   boxShadow: "0 2px 6px rgba(0,0,0,0.02)",
 };
 
@@ -1157,7 +1262,7 @@ function AlatMusikPage({ onBack }) {
 const TOTAL_MATERI_MUSIKAMI = 6; 
 
 function ProfilPage({ user, onLogout }) {
-  // Hitung jumlah materi selesai dan persentase bar secara otomatis
+ // Hitung jumlah materi selesai dan persentase bar secara otomatis
   const materiSelesai = user?.progress || 0;
   const persentaseBelajar = Math.min(
     Math.round((materiSelesai / TOTAL_MATERI_MUSIKAMI) * 100), 
@@ -1165,18 +1270,31 @@ function ProfilPage({ user, onLogout }) {
   );
 
   return (
-    <div style={{ flex: 1, background: "#faf5ff", fontFamily: "system-ui" }}>
+    <div style={{ flex: 1, background: "#faf5ff", fontFamily: "system-ui", paddingBottom: "100px" }}>
       {/* Tetap mempertahankan komponen Header bawaan kamu */}
       <Header title="Profil Akun" sub="Detail informasi belajar Anda" />
       
       <div style={{ padding: "1rem", textAlign: "center" }}>
-        {/* Menggunakan data AVATARS bawaan kodemu sebelumnya */}
-        <div style={{ fontSize: "4rem", marginBottom: "0.5rem" }}>
-          {AVATARS && AVATARS[user?.avatarIdx] ? AVATARS[user.avatarIdx] : "👤"}
+        {/* AVATAR MANUSIA (SINKRON DENGAN DATA LOGIN) */}
+        <div style={{ 
+          fontSize: "4rem", 
+          background: "#f3e8ff", 
+          width: "100px", 
+          height: "100px", 
+          borderRadius: "50%", 
+          display: "flex", 
+          alignItems: "center", 
+          justifyContent: "center", 
+          margin: "0 auto 1rem auto",
+          boxShadow: "0 4px 12px rgba(124,58,237,0.1)"
+        }}>
+          {AVATARS[user?.avatarIdx] ? AVATARS[user.avatarIdx] : "👤"}
         </div>
         
-        <h2 style={{ margin: "0 0 0.25rem 0", color: "#333", fontWeight: 700 }}>{user?.name}</h2>
-        <p style={{ color: "#888", fontSize: "0.85rem", margin: "0 0 1.5rem 0" }}>Status Belajar: Level MI</p>
+        <h2 style={{ margin: "0 0 0.25rem 0", color: "#333", fontWeight: 700 }}>
+          {user?.name || "Siswa MUSIKAMI"}
+        </h2>
+        <p style={{ color: "#888", fontSize: "0.85rem", margin: "0 0 1.5rem 0" }}>Status Belajar: Level SD/MI</p>
 
         {/* 2. BOX PROGRES BELAJAR BARU */}
         <div 
@@ -1239,7 +1357,8 @@ function ProfilPage({ user, onLogout }) {
             color: "#fff", 
             border: "none", 
             fontWeight: 700, 
-            cursor: "pointer" 
+            cursor: "pointer",
+            transition: "background 0.2s" 
           }}
         >
           Keluar Akun 🚪
@@ -1447,8 +1566,8 @@ export default function App() {
           {tab === "alatmusik" && <AlatMusikPage onBack={() => setTab("home")} />}
         </div>
 
-        {/* NAVIGATION BOTTOM BAR */}
-        {!materiActiveId && !latihanActiveId && ["home", "materi", "latihan", "profil"].includes(tab) && (
+        {/* Navigasi Bottom Bar selalu muncul di setiap page */}
+        {["home", "materi", "latihan", "profil", "eksplorasi", "kuis", "alatmusik"].includes(tab) && (
           <div style={{ position: "fixed", bottom: 20, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 10 }}>
             <div style={{ width: "100%", maxWidth: tab === "home" ? "1200px" : "450px", padding: "0 20px", boxSizing: "border-box" }}>
               <BottomNav tab={tab} setTab={setTab} />
