@@ -336,7 +336,7 @@ function LoginScreen({ onLoginSuccess }) {
   const [avatar, setAvatar] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  const AVATARS = ["👩", "👨", "👧", "👦", "👱‍♀️", "👱‍♂️"]; // Sesuaikan dengan avatar aplikasi kamu
+  const AVATARS = ["👩", "👨", "👧", "👦", "👱‍♀️", "👱‍♂️"]; 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -353,15 +353,14 @@ function LoginScreen({ onLoginSuccess }) {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // Simpan data profil tambahan ke Firestore menggunakan UID dari Auth
-        const { doc, setDoc } = await import("firebase/firestore"); // Import dinamis jika diperlukan
+        const { doc, setDoc } = await import("firebase/firestore"); 
         await setDoc(doc(db, "users", user.uid), {
           uid: user.uid,
           name: name.trim(),
-          avatarIdx: avatar, // 👈 Menyimpan indeks angka agar sesuai dengan ProfilPage
-          email: email,
-          progress: 0,       // 👈 INDIKATOR UTAMA: Mengunci materi awal di angka 0 agar tidak undefined
-          quizBest: 0,       // 👈 Memberikan nilai awal skor kuis
+          avatarIdx: avatar, 
+          email: email.trim(), // Pastikan tersimpan dengan aman
+          progress: 0, 
+          quizBest: 0, 
           createdAt: new Date()
         });
 
@@ -371,7 +370,8 @@ function LoginScreen({ onLoginSuccess }) {
           name: name.trim(), 
           avatarIdx: avatar, 
           progress: 0, 
-          quizBest: 0 
+          quizBest: 0,
+          email: email.trim() // 🔑 DIKIRIM KE APP.JSX
         });
 
       } else {
@@ -379,7 +379,6 @@ function LoginScreen({ onLoginSuccess }) {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // Ambil data profil dari Firestore berdasarkan UID yang berhasil login
         const { doc, getDoc } = await import("firebase/firestore");
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
@@ -390,13 +389,20 @@ function LoginScreen({ onLoginSuccess }) {
             uid: user.uid, 
             name: userData.name, 
             avatarIdx: userData.avatarIdx ?? 0,
-            // Fallback sekuritas jika dokumen lama tidak memiliki properti progress
             progress: userData.progress !== undefined ? userData.progress : 0,
-            quizBest: userData.quizBest !== undefined ? userData.quizBest : 0
+            quizBest: userData.quizBest !== undefined ? userData.quizBest : 0,
+            email: userData.email || user.email // 🔑 DIKIRIM KE APP.JSX (Ambil dari Firestore atau Auth)
           });
         } else {
           // Antisipasi jika data di firestore terhapus tapi auth masih ada
-          onLoginSuccess({ uid: user.uid, name: "User MUSIKAMI", avatarIdx: 0, progress: 0, quizBest: 0 });
+          onLoginSuccess({ 
+            uid: user.uid, 
+            name: "User MUSIKAMI", 
+            avatarIdx: 0, 
+            progress: 0, 
+            quizBest: 0,
+            email: user.email // 🔑 DIKIRIM KE APP.JSX
+          });
         }
       }
     } catch (error) {
@@ -423,7 +429,6 @@ function LoginScreen({ onLoginSuccess }) {
       <div style={{ fontSize: "3rem", marginBottom: "0.5rem" }}>🎵</div>
       <div style={{ fontFamily: "system-ui", fontSize: "1.8rem", fontWeight: 900, background: "linear-gradient(90deg,#7c3aed,#ec4899)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "0.05em", marginBottom: "0.25rem" }}>MUSIKAMI</div>
       
-      {/* DESKRIPSI BARU UNTUK SEKOLAH DASAR / MI */}
       <div style={{ color: "#4b5563", fontSize: "0.95rem", fontWeight: "600", fontFamily: "system-ui", marginBottom: "0.5rem", textAlign: "center" }}>
         Aplikasi Unsur Musik untuk SD/MI
       </div>
@@ -436,7 +441,6 @@ function LoginScreen({ onLoginSuccess }) {
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           
-          {/* Input Nama & Avatar hanya muncul saat DAFTAR */}
           {isSignUp && (
             <>
               <div>
@@ -1368,6 +1372,202 @@ function ProfilPage({ user, onLogout }) {
   );
 }
 
+
+// Pastikan db sudah diimport dari konfigurasi firebase kamu di atas
+// import { db } from "./firebaseConfig"; 
+function AdminDashboard({ onLogout }) {
+  const [usersList, setUsersList] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Jumlah total materi asli
+  const TOTAL_MATERI = 6; 
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const { collection, getDocs } = await import("firebase/firestore");
+        const querySnapshot = await getDocs(collection(db, "users"));
+        const usersData = [];
+        
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.email !== "admin@musikami.com") {
+            usersData.push({ id: doc.id, ...data });
+          }
+        });
+        
+        setUsersList(usersData);
+      } catch (error) {
+        console.error("Gagal mengambil data pengguna:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  return (
+    <div style={{ width: "100%", minHeight: "100vh", background: "#f8fafc", fontFamily: "'Inter', system-ui, -apple-system, sans-serif", paddingBottom: "60px" }}>
+      
+      {/* TOP NAVIGATION BAR */}
+      <header style={{ 
+        background: "#ffffff", 
+        padding: "1rem 2.5rem", 
+        display: "flex", 
+        justifyContent: "space-between", 
+        alignItems: "center",
+        borderBottom: "1px solid #e2e8f0",
+        position: "sticky",
+        top: 0,
+        zIndex: 50
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ background: "#4f46e5", color: "#fff", padding: "8px 12px", borderRadius: "10px", fontWeight: 800, fontSize: "1.1rem" }}>M</div>
+          <div>
+            <h1 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.025em" }}>Dashboard Admin</h1>
+            <p style={{ margin: 0, fontSize: "0.8rem", color: "#64748b", fontWeight: 500 }}>Aplikasi Pembelajaran Mandiri MUSIKAMI</p>
+          </div>
+        </div>
+        
+        <button 
+          onClick={onLogout} 
+          style={{ 
+            background: "#fff", 
+            color: "#0f172a", 
+            border: "1px solid #e2e8f0", 
+            padding: "0.5rem 1.2rem", 
+            borderRadius: 8, 
+            fontWeight: 600, 
+            fontSize: "0.875rem",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            transition: "all 0.15s ease-in-out"
+          }}
+          onMouseOver={(e) => {
+            e.target.style.background = "#f8fafc";
+            e.target.style.borderColor = "#cbd5e1";
+          }}
+          onMouseOut={(e) => {
+            e.target.style.background = "#fff";
+            e.target.style.borderColor = "#e2e8f0";
+          }}
+        >
+          Keluar Ke Sistem
+        </button>
+      </header>
+
+      {/* KONTEN UTAMA */}
+      <main style={{ padding: "2.5rem", maxWidth: "1280px", margin: "0 auto" }}>
+        
+        {/* SECTION HEADER DATA */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.025em" }}>Ringkasan Progres Pengguna</h2>
+            <p style={{ margin: "2px 0 0 0", fontSize: "0.875rem", color: "#64748b" }}>Data analitik tingkat penyelesaian bab materi dan performa kuis terbaik siswa.</p>
+          </div>
+          <div style={{ background: "#e0e7ff", color: "#4338ca", padding: "6px 14px", borderRadius: "9999px", fontSize: "0.875rem", fontWeight: 600 }}>
+            {usersList.length} Siswa Terdaftar
+          </div>
+        </div>
+        
+        {/* DATA CONTAINER */}
+        <div style={{ background: "#ffffff", borderRadius: 12, border: "1px solid #e2e8f0", boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)", overflow: "hidden" }}>
+          
+          {loading ? (
+            <div style={{ textAlign: "center", padding: "5rem 0", color: "#64748b" }}>
+              <span style={{ fontSize: "1.5rem", display: "block", marginBottom: "0.5rem" }}>⏳</span>
+              <p style={{ fontSize: "0.95rem", fontWeight: 500 }}>Sinkronisasi basis data pengguna sedang berlangsung...</p>
+            </div>
+          ) : usersList.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "5rem 0", color: "#94a3b8" }}>
+              <span style={{ fontSize: "1.5rem", display: "block", marginBottom: "0.5rem" }}>📁</span>
+              <p style={{ fontSize: "0.95rem" }}>Belum ada rekaman entri data pengguna aktif ditemukan.</p>
+            </div>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.875rem" }}>
+                <thead>
+                  <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#475569", fontWeight: 600 }}>
+                    <th style={{ padding: "0.85rem 1.5rem" }}>Identitas Siswa</th>
+                    <th style={{ padding: "0.85rem 1.5rem" }}>Alamat Email</th>
+                    <th style={{ padding: "0.85rem 1.5rem" }}>Penyelesaian Bab</th>
+                    <th style={{ padding: "0.85rem 1.5rem" }}>Metrik Progres</th>
+                    <th style={{ padding: "0.85rem 1.5rem", textAlign: "center" }}>Skor Kuis Tertinggi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {usersList.map((u) => {
+                    const selesai = u.progress || 0;
+                    const persen = Math.min(Math.round((selesai / TOTAL_MATERI) * 100), 100);
+                    const AVATARS_LIST = ["👩", "👨", "👧", "👦", "👱‍♀️", "👱‍♂️"];
+
+                    return (
+                      <tr 
+                        key={u.id} 
+                        style={{ borderBottom: "1px solid #f1f5f9", transition: "background 0.1s" }} 
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#f8fafc"} 
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                      >
+                        {/* NAMA */}
+                        <td style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#0f172a", display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span style={{ fontSize: "1.2rem", filter: "grayscale(10%)" }}>
+                            {AVATARS_LIST[u.avatarIdx] || "👤"}
+                          </span>
+                          {u.name}
+                        </td>
+                        
+                        {/* EMAIL */}
+                        <td style={{ padding: "1rem 1.5rem", color: "#475569", fontFamily: "monospace", fontSize: "0.85rem" }}>
+                          {u.email || "-"}
+                        </td>
+                        
+                        {/* CAPAIAN MATERI */}
+                        <td style={{ padding: "1rem 1.5rem", fontWeight: 500, color: "#334155" }}>
+                          <span style={{ background: "#f1f5f9", padding: "4px 8px", borderRadius: 6, fontSize: "0.8rem", fontWeight: 600, color: "#334155" }}>
+                            {selesai} dari {TOTAL_MATERI} Bab
+                          </span>
+                        </td>
+                        
+                        {/* PROGRESS BAR BARU */}
+                        <td style={{ padding: "1rem 1.5rem", width: "240px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                            <div style={{ flex: 1, height: 6, background: "#e2e8f0", borderRadius: 9999, overflow: "hidden" }}>
+                              <div style={{ 
+                                width: `${persen}%`, 
+                                height: "100%", 
+                                background: persen === 100 ? "#10b981" : "#4f46e5", 
+                                borderRadius: 9999 
+                              }} />
+                            </div>
+                            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#0f172a", width: "35px", textAlign: "right" }}>
+                              {persen}%
+                            </span>
+                          </div>
+                        </td>
+                        
+                        {/* SKOR KUIS */}
+                        <td style={{ padding: "1rem 1.5rem", textAlign: "center", fontWeight: 700, color: u.quizBest >= 80 ? "#16a34a" : "#0f172a" }}>
+                          <span style={{ fontSize: "1rem" }}>{u.quizBest || 0}</span>
+                          <span style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: 400 }}> / 100</span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+
+
 //function HomeStub({ user }) { return <div>Home</div>; }
 //function BottomNavStub() { return <div>Nav</div>; }
 
@@ -1394,12 +1594,37 @@ export default function App() {
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
-              setUser({ id: firebaseUser.uid, ...docSnap.data() });
+              const dbData = docSnap.data();
+              const userData = { 
+                id: firebaseUser.uid, 
+                uid: firebaseUser.uid,
+                name: dbData.name || "Siswa MUSIKAMI", 
+                avatarIdx: dbData.avatarIdx !== undefined ? dbData.avatarIdx : 0, 
+                progress: dbData.progress !== undefined ? dbData.progress : 0,
+                quizBest: dbData.quizBest !== undefined ? dbData.quizBest : 0,
+                email: dbData.email || firebaseUser.email
+              };
+
+              setUser(userData);
+
+              // 🛡️ CEK EMAIL ADMIN: Mengarahkan layar ke dashboard admin jika email cocok
+              if (firebaseUser.email === "admin@musikami.com") {
+                setScreen("admin");
+              } else {
+                setScreen("main");
+              }
+
             } else {
-              // Jika data user baru belum ada di Firestore, set default progress: 0
-              setUser({ id: firebaseUser.uid, name: "User MUSIKAMI", avatarIdx: 0, progress: 0 });
+              // Jika data user baru belum ada di Firestore, set default parameter secara lengkap
+              const defaultData = { id: firebaseUser.uid, uid: firebaseUser.uid, name: "User MUSIKAMI", avatarIdx: 0, progress: 0, quizBest: 0, email: firebaseUser.email };
+              setUser(defaultData);
+              
+              if (firebaseUser.email === "admin@musikami.com") {
+                setScreen("admin");
+              } else {
+                setScreen("main");
+              }
             }
-            setScreen("main");
           } else {
             setUser(null);
             setScreen("login");
@@ -1473,8 +1698,12 @@ export default function App() {
           <LoginScreen 
             onLoginSuccess={(userData) => {
               setUser(userData);
-              setScreen("main");
-              setTab("home");
+              if (userData.email === "admin@musikami.com") {
+                setScreen("admin");
+              } else {
+                setScreen("main");
+                setTab("home");
+              }
             }} 
           />
         </div>
@@ -1482,7 +1711,14 @@ export default function App() {
     );
   }
 
-  // TAMPILAN UTAMA APLIKASI (SETELAH LOGIN)
+  // TAMPILAN LAYAR ADMIN DASHBOARD
+  if (screen === "admin") {
+    return (
+      <AdminDashboard onLogout={handleLogout} />
+    );
+  }
+
+  // TAMPILAN UTAMA APLIKASI (SETELAH LOGIN - SEBAGAI SISWA)
   return (
     <div style={{ width: "100%", minHeight: "100vh", background: "#f3e8ff", display: "flex", justifyContent: "center", alignItems: "flex-start", overflowY: "auto", padding: "20px 0" }}>
       <div style={{ 
