@@ -6,8 +6,8 @@ import {
   signInWithEmailAndPassword 
 } from "firebase/auth"; // <-- Pastikan ini ada di bagian atas file App.jsx jika ditaruh satu file, atau diimpor dengan benar.
 import { auth } from "/firebase";
-
-
+import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
+import React from 'react'; // Tambahkan ini di baris pertama file App.jsx
 // ─── 10. KONFIGURASI GLOBAL PENYELARASAN NAMA TOOLS (POIN 10) ──────────────────
 const TOOLS_CONFIG = {
   home: { label: "Beranda", icon: "🏠" },
@@ -164,7 +164,6 @@ export default function App() {
   const [materiActiveId, setMateriActiveId] = useState(null); 
   const [latihanActiveId, setLatihanActiveId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
- 
 
   // State Poin 2: Pengenalan Tools Onboarding
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
@@ -191,8 +190,15 @@ export default function App() {
           } else {
             setUser({ uid: firebaseUser.uid, name: "Siswa Baru", avatarIdx: 0, progress: 0, quizBest: 0, email: firebaseUser.email });
           }
-          // Poin 2: Alihkan ke halaman pengenalan sebelum menu utama
-          setScreen(hasSeenOnboarding ? "main" : "onboarding");
+
+          // ─── KONDISI BARU: JIKA YANG LOGIN ADALAH ADMIN ───────────────────
+          if (firebaseUser.email === "admin@musikami.com") {
+            setScreen("admin");
+          } else {
+            // Jika siswa biasa, alihkan ke onboarding atau main
+            setScreen(hasSeenOnboarding ? "main" : "onboarding");
+          }
+          
         } catch (err) {
           console.error(err);
         }
@@ -220,10 +226,10 @@ export default function App() {
   // Poin 8 & Poin 5: Interseptor Navigasi Global Bar Bawah
   const handleTabChange = (targetTab) => {
     if (targetTab === "materi") {
-      setMateriActiveId(null); // Poin 5: Klik materi di foot bar mengembalikan ke rumpun jenis materi
+      setMateriActiveId(null); 
     }
     if (targetTab === "latihan") {
-      setLatihanActiveId(null); // Poin 8: Bisa kabur keluar dari pengerjaan latihan kapan saja
+      setLatihanActiveId(null); 
     }
     setTab(targetTab);
   };
@@ -238,22 +244,34 @@ export default function App() {
     return <div style={{ textAlign: "center", padding: "3rem", fontFamily: "system-ui" }}>Memuat Aplikasi... ⏳</div>;
   }
 
-  // SCREEN VIEW ROUTER
+  // ─── PERUBAHAN PADA SCREEN VIEW ROUTER ─────────────────────────────────────
   if (screen === "login") {
-    return <LoginScreen onLoginSuccess={(u) => { setUser(u); setScreen("onboarding"); }} />;
+    return <LoginScreen onLoginSuccess={(u) => { 
+      setUser(u); 
+      if (u.email === "admin@musikami.com") {
+        setScreen("admin");
+      } else {
+        setScreen("onboarding"); 
+      }
+    }} />;
   }
 
   if (screen === "onboarding") {
     return <OnboardingScreen onComplete={() => { setHasSeenOnboarding(true); setScreen("main"); setTab("home"); }} />;
   }
 
+  // JIKA SCREEN ADALAH ADMIN, AKAN LANGSUNG MERENDER ADMIN DASHBOARD TANPA FOOTBAR
+  if (screen === "admin") {
+    return <AdminDashboard onLogout={handleLogout} />;
+  }
+
+  // SCREEN SISWA BIASA (MAIN SCREEN)
   return (
     <div style={{ width: "100%", minHeight: "100vh", background: "#f8fafc", display: "flex", justifyContent: "center" }}>
       <div style={{ 
         width: "100%", maxWidth: "450px", minHeight: "100vh", background: "#fff", 
         display: "flex", flexDirection: "column", position: "relative",
         boxShadow: "0 0 20px rgba(0,0,0,0.05)",
-        // Poin 4: Ditambahkan padding-bottom melimpah agar konten materi tidak terbentur foot bar melayang
         paddingBottom: "110px" 
       }}>
         
@@ -265,31 +283,46 @@ export default function App() {
                 onOpenPengembang={() => setTab("pengembang")} />
         )}
 
-{/* TAMBAHKAN ROUTER INI SEJAJAR DENGAN KONDISI TAB LAINNYA */}
-{tab === "pengembang" && (
-  <ProfilPengembangPage onBack={() => setTab("home")} />
-)}
+        {tab === "pengembang" && (
+          <ProfilPengembangPage onBack={() => setTab("home")} />
+        )}
+
         {tab === "materi" && (
           materiActiveId ? (
             <MateriDetail 
               id={materiActiveId} 
               user={user} 
               onBack={() => setMateriActiveId(null)}
-              // Poin 5: Selesai langsung lempar otomatis ke ID materi berikutnya
               onCompleteMateri={(currentId) => {
-                const currentIdx = MATERI_LIST.findIndex(x => x.id === currentId);
-                if (currentIdx !== -1 && currentIdx === user.progress) {
-                  updateUserProgressInDb({ progress: Math.min(user.progress + 1, MATERI_LIST.length) });
-                }
-                
-                if (currentIdx !== -1 && currentIdx + 1 < MATERI_LIST.length) {
-                  setMateriActiveId(MATERI_LIST[currentIdx + 1].id);
-                  window.scrollTo(0,0);
-                } else {
-                  alert("Selamat! Semua bab materi telah selesai kamu pelajari! 🥳");
-                  setMateriActiveId(null);
-                }
-              }}
+  const currentIdx = MATERI_LIST.findIndex(x => x.id === currentId);
+  if (currentIdx !== -1 && currentIdx === user.progress) {
+    updateUserProgressInDb({ progress: Math.min(user.progress + 1, MATERI_LIST.length) });
+  }
+  
+  if (currentIdx !== -1 && currentIdx + 1 < MATERI_LIST.length) {
+    // 1. Ganti ID materi ke materi berikutnya
+    setMateriActiveId(MATERI_LIST[currentIdx + 1].id);
+    
+    // 2. OTOMATIS PAKSA SCROLL CONTAINER KE ATAS LANGSUNG DI SINI
+    setTimeout(() => {
+      // Cari elemen div yang bertanggung jawab atas scroll di aplikasi kamu
+      // Kita cari berdasarkan properti style overflowY yang menampung halaman materi
+      const containers = document.querySelectorAll("div");
+      containers.forEach((div) => {
+        if (div.style.overflowY === "auto" || div.style.overflowY === "scroll" || div.scrollTop > 0) {
+          div.scrollTop = 0; // Paksa scroll internal ke paling atas
+        }
+      });
+      
+      // Tetap jalankan scroll layar utama browser sebagai cadangan
+      window.scrollTo(0, 0);
+    }, 50); // Diberi delay 50ms agar React selesai merender teks materi baru terlebih dahulu
+
+  } else {
+    alert("Selamat! Semua bab materi telah selesai kamu pelajari! 🥳");
+    setMateriActiveId(null);
+  }
+}}
             />
           ) : (
             <MateriPage user={user} onOpenDetail={(id) => setMateriActiveId(id)} />
@@ -306,7 +339,6 @@ export default function App() {
 
         {tab === "profil" && <ProfilPage user={user} onLogout={handleLogout} />}
         {tab === "eksplorasi" && <EksplorasiPage onBack={() => setTab("home")} />}
-        
         
         {tab === "kuis" && (
           <KuisCore 
@@ -475,6 +507,157 @@ function OnboardingScreen({ onComplete }) {
     </div>
   );
 }
+
+// ─── KOMPONEN DASHBOARD ADMIN (Sekitar Baris 479) ──────────────────────────
+function AdminDashboard({ onLogout }) {
+  const [usersList, setUsersList] = useState([]);
+  const [loading, setLoading] = useState(false); // Default false untuk menghindari cascading render awal
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const TOTAL_MATERI = 6;
+
+  // fetchUsers diperbaiki agar aman dipanggil di dalam useEffect
+  useEffect(() => {
+    let isMounted = true;
+    
+    const fetchUsers = async () => {
+      if (!isMounted) return;
+      setLoading(true);
+      try {
+        const querySnapshot = await getDocs(collection(db, "users"));
+        const usersData = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.email !== "admin@musikami.com") {
+            usersData.push({ id: doc.id, ...data });
+          }
+        });
+        if (isMounted) setUsersList(usersData);
+      } catch (error) {
+        console.error("Gagal mengambil data:", error);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchUsers();
+
+    return () => {
+      isMounted = false; // Cleanup untuk mencegah memory leak
+    };
+  }, []);
+
+  const handleDeleteUser = async (userId, userName) => {
+    const confirmDelete = window.confirm(
+      `Apakah Anda yakin ingin menghapus data "${userName}"?`
+    );
+
+    if (confirmDelete) {
+      try {
+        await deleteDoc(doc(db, "users", userId));
+        alert("Data berhasil dihapus!");
+        setUsersList(usersList.filter((u) => u.id !== userId));
+      } catch (error) {
+        console.error("Gagal menghapus:", error);
+        alert("Gagal menghapus data.");
+      }
+    }
+  };
+
+  const filteredUsers = usersList.filter((u) =>
+    u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div style={{ width: "100%", minHeight: "100vh", background: "#f8fafc", fontFamily: "system-ui", paddingBottom: "60px" }}>
+      <header style={{ background: "#fff", padding: "1rem 2.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #e2e8f0" }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: "1.2rem", fontWeight: 700 }}>Dashboard Admin</h1>
+          <p style={{ margin: 0, fontSize: "0.75rem", color: "#64748b" }}>Panel Kontrol Data Siswa MUSIKAMI</p>
+        </div>
+        <button onClick={onLogout} style={{ background: "#fff", border: "1px solid #e2e8f0", padding: "0.5rem 1rem", borderRadius: 8, cursor: "pointer" }}>Keluar Sistem</button>
+      </header>
+
+      <main style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "1.5rem", gap: "1rem", flexWrap: "wrap" }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 800 }}>Kelola Pengguna</h2>
+            <p style={{ margin: 0, color: "#64748b", fontSize: "0.9rem" }}>Total: {filteredUsers.length} Siswa</p>
+          </div>
+          <input 
+            type="text" 
+            placeholder="Cari nama atau email..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ padding: "0.6rem 1rem", borderRadius: 8, border: "1px solid #cbd5e1", width: "250px" }}
+          />
+        </div>
+
+        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0", overflow: "hidden" }}>
+          {loading ? (
+            <div style={{ textAlign: "center", padding: "4rem" }}>Memuat Data... ⏳</div>
+          ) : filteredUsers.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "4rem", color: "#94a3b8" }}>Tidak ada data ditemukan.</div>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.85rem" }}>
+              <thead>
+                <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+                  <th style={{ padding: "1rem" }}>Nama Siswa</th>
+                  <th style={{ padding: "1rem" }}>Email</th>
+                  <th style={{ padding: "1rem" }}>Progres Materi</th>
+                  <th style={{ padding: "1rem", textAlign: "center" }}>Skor Kuis</th>
+                  <th style={{ padding: "1rem", textAlign: "center" }}>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map((u) => {
+                  const progress = Math.round(((u.progress || 0) / TOTAL_MATERI) * 100);
+                  return (
+                    <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                      <td style={{ padding: "1rem", fontWeight: 600 }}>{u.name}</td>
+                      <td style={{ padding: "1rem", color: "#64748b" }}>{u.email}</td>
+                      <td style={{ padding: "1rem" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div style={{ flex: 1, height: "6px", background: "#e2e8f0", borderRadius: "10px", overflow: "hidden" }}>
+                            <div style={{ width: `${progress}%`, height: "100%", background: "#4f46e5" }}></div>
+                          </div>
+                          <span style={{ fontSize: "0.75rem", fontWeight: "bold" }}>{progress}%</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: "1rem", textAlign: "center", fontWeight: "bold", color: "#ec4899" }}>{u.quizBest || 0}</td>
+                      <td style={{ padding: "1rem", textAlign: "center" }}>
+                        <button onClick={() => handleDeleteUser(u.id, u.name)} style={{ padding: "0.4rem 0.8rem", background: "#fee2e2", color: "#ef4444", border: "1px solid #fecaca", borderRadius: "6px", cursor: "pointer" }}>Hapus 🗑️</button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// ─── PENGGUNAAN DI FUNGSI UTAMA (Saran Struktur Routing/Kondisi Login) ───────
+// Pastikan komponen ini dipanggil di fungsi utama App() kamu, misalnya seperti ini:
+/*
+function App() {
+  const [user, setUser] = useState(null); // Nilai dari Firebase Auth Anda
+
+  if (user?.email === "admin@musikami.com") {
+    return <AdminDashboard onLogout={handleLogout} />;
+  }
+
+  return (
+    // Penampilan halaman siswa biasa (Beranda, Materi, ProfilPage, dll)
+  );
+}
+*/
+
+
 
 // ─── COMPONENT 4: BERANDA DENGAN PENYELARASAN NAMA TOOLS (POIN 10) ───────────
 // ─── COMPONENT: HOME (SUDAH DISESUAIKAN UNTUK PROFIL PENGEMBANG) ───────────────
@@ -714,6 +897,16 @@ function MateriDetail({ id,  onBack, onCompleteMateri }) {
   const m = MATERI_LIST.find(x => x.id === id);
   const d = MATERI_DETAIL[id] || MATERI_DETAIL["ritme"];
 
+  React.useEffect(() => {
+    // Jalankan scroll global
+    window.scrollTo(0, 0);
+    
+    // Cari container div yang memiliki scroll internal (jika ada) dan paksa ke koordinat 0
+    const scrollContainer = document.getElementById("main-app-container") || document.querySelector("div[style*='overflowY']");
+    if (scrollContainer) {
+      scrollContainer.scrollTop = 0;
+    }
+  }, [id]);
   return (
     <div style={{ flex: 1, overflowY: "auto", background: "#faf5ff" }}>
       <Header title={d.title} sub={m?.sub} onBack={onBack} />
@@ -762,6 +955,7 @@ function MateriDetail({ id,  onBack, onCompleteMateri }) {
     </div>
   );
 }
+
 
 // ─── COMPONENT 7: KATEGORI RUANG LATIHAN ─────────────────────────────────────
 function LatihanPage({ onSelectLatihan, onBack }) {
