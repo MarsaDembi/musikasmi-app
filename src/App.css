@@ -28,26 +28,17 @@ button {
 }
 
 /* ==========================================================================
-   PERBAIKAN FINAL AMAN: SPACE PUTIH HILANG & SEMUA HEADER NORMAL TOTAL
+   PERBAIKAN AMAN: BOTTOM NAV MUNCUL & SPACE PUTIH HILANG
    ========================================================================== */
 
-/* 1. SOLUSI UTAMA: Warnai latar belakang dasar area scroll dengan putih penuh.
-      Dengan cara ini, meskipun konten halaman Home pendek, tidak akan ada 
-      space abu-abu atau putih kosong yang bocor di bawah navbar */
-div[style*="overflowY: \"auto\""], 
-div[style*="overflow-y: auto"] {
-  background-color: #ffffff !important; 
-}
-
-/* 2. Bersihkan aturan agresif sebelumnya agar layout asli komponen 
-      di halaman Home, Materi, dll. TIDAK RUSAK atau berubah bentuk */
-div[style*="overflowY: \"auto\""] > div,
-div[style*="overflow-y: auto"] > div {
-  width: 100% !important;
+/* 1. Berikan warna latar belakang putih pada area container utama mockup HP, 
+   bukan menduga-duga lewat selektor string overflowY yang agresif */
+div[style*="max-width: 450px"],
+div[style*="maxWidth: 450px"] {
   background-color: #ffffff !important;
 }
 
-/* 3. Bersihkan celah kosong bawaan di bawah video Youtube */
+/* 2. Bersihkan celah kosong bawaan di bawah video Youtube */
 iframe {
   display: block !important;
   margin: 0 !important;
@@ -59,7 +50,7 @@ iframe + div {
   margin-top: 12px !important;
 }
 
-/* 4. Kustomisasi Scrollbar agar minimalis */
+/* 3. Kustomisasi Scrollbar agar minimalis */
 ::-webkit-scrollbar {
   width: 4px;
 }
