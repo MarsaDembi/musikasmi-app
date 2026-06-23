@@ -1,19 +1,19 @@
 import { useState, useEffect} from "react";
 import "././App.css";
-import { db } from "/firebase"; // <-- Pastikan path import firebase.js kamu benar
+import { db } from "/firebase"; 
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword 
-} from "firebase/auth"; // <-- Pastikan ini ada di bagian atas file App.jsx jika ditaruh satu file, atau diimpor dengan benar.
+} from "firebase/auth"; 
 import { auth } from "/firebase";
 import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
-import React from 'react'; // Tambahkan ini di baris pertama file App.jsx
-// ─── 10. KONFIGURASI GLOBAL PENYELARASAN NAMA TOOLS (POIN 10) ──────────────────
+import React from 'react'; 
+
 const TOOLS_CONFIG = {
   home: { label: "Beranda", icon: "🏠" },
   materi: { label: "Materi", icon: "📚" },
   latihan: { label: "Latihan", icon: "✏️" },
-  profil: { label: "Profil", icon: "👤" }, // Poin 3 & Poin 10
+  profil: { label: "Profil", icon: "👤" }, 
   eksplorasi: { label: "Eksplorasi", icon: "🎧" },
   kuis: { label: "Kuis", icon: "🏆" },
   alatmusik: { label: "Alat Musik", icon: "🎸" }
@@ -122,6 +122,16 @@ const QUIZ_QUESTIONS = [
   { q: "Largo adalah istilah tempo yang berarti...", opts: ["Sangat cepat", "Sedang", "Sangat lambat", "Agak cepat"], ans: 2 },
   { q: "Notasi do-re-mi-fa-sol-la-si adalah contoh dari...", opts: ["Harmoni", "Dinamika", "Irama", "Melodi"], ans: 3 },
   { q: "Crescendo dalam dinamika berarti...", opts: ["Berangsur lembut", "Tiba-tiba keras", "Berangsur keras", "Tiba-tiba lembut"], ans: 2 },
+  { q: "Alat musik ritmis yang dimainkan dengan cara digoyang dan berasal dari Jawa Barat adalah...", opts: ["Kolintang", "Sasando", "Angklung", "Gamelan"], ans: 2 },
+  { q: "Tangga nada yang hanya terdiri dari lima nada pokok dalam satu oktaf disebut...", opts: ["Tangga nada diatonis", "Tangga nada pentatonis", "Tangga nada kromatis", "Tangga nada minor"], ans: 1 },
+  { q: "Lagu wajib nasional 'Bagimu Negeri' diciptakan oleh...", opts: ["Kusbini", "C. Simanjuntak", "Ismail Marzuki", "Ibu Sud"], ans: 0 },
+  { q: "Tanda yang digunakan dalam musik untuk menunjukkan bagian lagu yang tidak berbunyi (diam) dinamakan...", opts: ["Tanda Dinamika", "Tanda Istirahat (Rest)", "Tanda Kunci", "Tanda Birama"], ans: 1 },
+  { q: "Lagu daerah 'Apuse' yang memiliki irama ceria dan bersemangat berasal dari provinsi...", opts: ["Maluku", "Papua", "Nusa Tenggara Timur", "Sulawesi Utara"], ans: 1 },
+  { q: "Dalam notasi balok, kepala not yang berbentuk bulat kosong tanpa tiang memiliki nilai...", opts: ["1 ketuk", "2 ketuk", "3 ketuk", "4 ketuk (Not Penuh)"], ans: 3 },
+  { q: "Lagu nasional yang diciptakan untuk mengenang jasa para pahlawan yang gugur dengan tempo lambat dan khidmat adalah...", opts: ["Maju Tak Gentar", "Mengheningkan Cipta", "Garuda Pancasila", "Halo-Halo Bandung"], ans: 1 },
+  { q: "Alat musik yang berfungsi sebagai pengatur ritme atau jalannya lagu disebut alat musik...", opts: ["Melodis", "Harmonis", "Ritmis", "Klasik"], ans: 2 },
+  { q: "Jika tanda dinamika tertulis 'pp' (pianissimo), maka musik harus dimainkan dengan suara...", opts: ["Sangat keras", "Agak keras", "Sangat lembut", "Sedang-sedang saja"], ans: 2 },
+  { q: "Simbol '#' (kres/sharp) yang diletakkan di depan not balok berfungsi untuk...", opts: ["Menaikkan nada setengah laras", "Menurunkan nada setengah laras", "Memperpanjang ketukan nada", "Menghentikan bunyi nada"], ans: 0 }
 ];
 
 
@@ -135,24 +145,52 @@ const LATIHAN_TYPES = [
 
 const LATIHAN_SOAL = {
   tempo: [
-    { q:"Lagu dengan tempo 60 BPM termasuk kategori...", opts:["Presto","Largo","Allegro","Moderato"], ans:1 },
-    { q:"Allegro berarti musik dimainkan dengan...", opts:["Sangat lambat","Lambat","Cepat","Sangat cepat"], ans:2 },
-    { q:"Lagu pengantar tidur biasanya menggunakan tempo...", opts:["Presto","Allegro","Largo","Vivace"], ans:2 },
+    { q: "Lagu dengan tempo 60 BPM termasuk kategori...", opts: ["Presto", "Largo", "Allegro", "Moderato"], ans: 1 },
+    { q: "Allegro berarti musik dimainkan dengan...", opts: ["Sangat lambat", "Lambat", "Cepat", "Sangat cepat"], ans: 2 },
+    { q: "Lagu pengantar tidur biasanya menggunakan tempo...", opts: ["Presto", "Allegro", "Largo", "Vivace"], ans: 2 },
+    { q: "Jika seorang dirigen memimpin lagu 'Hari Merdeka', tempo yang paling tepat digunakan adalah...", opts: ["Largo (Lambat)", "Adagio (Sangat Lambat)", "Moderato (Sedang)", "Allegro (Cepat)"], ans: 3 },
+    { q: "Alat penunjuk kecepatan tempo atau ketukan konstan dalam musik dinamakan...", opts: ["Stetoskop", "Metronome", "Mikrofon", "Tuning Fork"], ans: 1 },
+    { q: "Tempo yang memiliki kecepatan setara dengan orang berjalan santai (sedang) disebut...", opts: ["Andante", "Presto", "Largo", "Vivace"], ans: 0 },
+    { q: "Lagu kebangsaan 'Indonesia Raya' ciptaan W.R. Soepratman harus dinyanyikan dengan tempo...", opts: ["Sangat lambat", "Lambat dan sedih", "Sedang (Con Bravura / Khidmat)", "Sangat cepat (Presto)"], ans: 2 },
+    { q: "Istilah tempo 'Presto' memiliki arti bahwa lagu harus dimainkan secara...", opts: ["Lambat sekali", "Sangat cepat", "Sedang", "Berubah-ubah"], ans: 1 },
+    { q: "Jika tertulis istilah 'Ritardando' (Rit.) pada teks lagu, hal itu berarti...", opts: ["Tempo berangsur-angsur melambat", "Tempo berangsur-angsur memcepat", "Volume suara semakin keras", "Lagu harus segera berhenti"], ans: 0 },
+    { q: "Urutan tingkatan tempo dari yang paling lambat ke yang paling cepat adalah...", opts: ["Allegro - Moderato - Largo", "Largo - Moderato - Allegro", "Moderato - Largo - Allegro", "Largo - Allegro - Moderato"], ans: 1 },
   ],
   irama: [
-    { q:"Birama 2/4 berarti ada berapa ketukan per bar?", opts:["1","2","3","4"], ans:1 },
-    { q:"Tanda 'istirahat' dalam irama berarti...", opts:["Bermain keras","Tidak berbunyi","Bermain cepat","Bermain lembut"], ans:1 },
-    { q:"Ritme yang paling umum digunakan adalah birama...", opts:["2/4","3/4","4/4","6/8"], ans:2 },
+    { q: "Birama 2/4 berarti ada berapa ketukan per bar?", opts: ["1", "2", "3", "4"], ans: 1 },
+    { q: "Tanda 'istirahat' dalam irama berarti...", opts: ["Bermain keras", "Tidak berbunyi", "Bermain cepat", "Bermain lembut"], ans: 1 },
+    { q: "Ritme yang paling umum digunakan adalah birama...", opts: ["2/4", "3/4", "4/4", "6/8"], ans: 2 },
+    { q: "Lagu daerah 'Burung Kakaktua' atau lagu dansa Waltz umumnya dimainkan dengan birama...", opts: ["2/4", "3/4", "4/4", "6/8"], ans: 1 },
+    { q: "Dalam penulisan birama 4/4, angka yang di bawah (penyebut) menunjukkan...", opts: ["Jumlah ketukan dalam satu birama", "Nilai not yang menjadi dasar ketukan", "Kecepatan lagu", "Keras lembutnya suara"], ans: 1 },
+    { q: "Lagu anak-anak 'Topi Saya Bundar' menggunakan ketukan birama...", opts: ["2/4", "3/4", "4/4", "6/8"], ans: 1 },
+    { q: "Garis tegak lurus yang membatasi antara satu ruang birama dengan ruang birama lainnya disebut...", opts: ["Garis paranada", "Garis lengkung", "Garis birama", "Garis bantu"], ans: 2 },
+    { q: "Jika sebuah lagu memiliki birama 6/8, maka dalam satu birama terdapat...", opts: ["6 ketukan dengan not seperdelapan", "8 ketukan dengan not seperenam", "6 ketukan dengan not seperempat", "3 ketukan dengan not setengah"], ans: 0 },
+    { q: "Pola irama yang memiliki ketukan atau tekanan yang berulang secara teratur disebut...", opts: ["Melodi", "Harmoni", "Dinamika", "Ritme (Pulsa/Metrum)"], ans: 3 },
+    { q: "Lagu nasional 'Pariwisata' atau lagu mars pramuka umumnya menggunakan ketukan tegas berbirama...", opts: ["3/4", "2/4 atau 4/4", "6/8", "1/4"], ans: 1 },
   ],
   dinamika: [
-    { q:"Simbol 'ff' (fortissimo) berarti...", opts:["Lembut","Agak keras","Sangat keras","Sedang"], ans:2 },
-    { q:"Decrescendo berarti musik...", opts:["Bertambah keras","Bertambah lembut","Tetap keras","Tetap lembut"], ans:1 },
-    { q:"'mp' dalam dinamika adalah singkatan dari...", opts:["Molto piano","Mezzo piano","Molto presto","Mezzo presto"], ans:1 },
+    { q: "Simbol 'ff' (fortissimo) berarti...", opts: ["Lembut", "Agak keras", "Sangat keras", "Sedang"], ans: 2 },
+    { q: "Decrescendo berarti musik...", opts: ["Bertambah keras", "Bertambah lembut", "Tetap keras", "Tetap lembut"], ans: 1 },
+    { q: "'mp' dalam dinamika adalah singkatan dari...", opts: ["Molto piano", "Mezzo piano", "Molto presto", "Mezzo presto"], ans: 1 },
+    { q: "Ketika menyanyikan bagian reff lagu yang penuh semangat, dinamika yang sebaiknya digunakan adalah...", opts: ["Piano (Lembut)", "Forte (Keras)", "Pianissimo (Sangat Lembut)", "Mezzo Piano (Agak Lembut)"], ans: 1 },
+    { q: "Tanda dinamika berupa garis dua melebar ke kanan (<) yang berarti suara bertahap mengeras disebut...", opts: ["Crescendo", "Decrescendo", "Staccato", "Legato"], ans: 0 },
+    { q: "Simbol dinamika 'p' (piano) berarti lagu tersebut dinyanyikan dengan suara yang...", opts: ["Keras", "Nyaring", "Lembut", "Sangat keras sekali"], ans: 2 },
+    { q: "Tanda dinamika yang paling tepat untuk menggambarkan bisikan suara rahasia adalah...", opts: ["f (forte)", "pp (pianissimo)", "mf (mezzo forte)", "ff (fortissimo)"], ans: 1 },
+    { q: "Istilah dinamika 'Mezzo Forte' (mf) mengindikasikan suara yang...", opts: ["Sangat lembut", "Agak keras", "Sangat keras", "Berubah mendadak"], ans: 1 },
+    { q: "Perubahan dinamika dari keras ke lembut secara mendadak biasanya diberi simbol...", opts: ["Crescendo", "Subito Piano", "Diminuendo", "Fortissimo"], ans: 1 },
+    { q: "Fungsi utama dari adanya tanda dinamika dalam sebuah lagu adalah untuk...", opts: ["Mengatur kecepatan ketukan lagu", "Menentukan tinggi rendahnya tangga nada", "Menunjukkan perasaan atau ekspresi (jiwa lagu)", "Mempercepat durasi lagu"], ans: 2 },
   ],
   notasi: [
-    { q:"Not 'do' dalam angka dilambangkan dengan...", opts:["2","3","1","4"], ans:2 },
-    { q:"Tanda kunci treble (sol) digunakan untuk...", opts:["Nada bass","Nada tinggi","Nada sedang","Nada perkusi"], ans:1 },
-    { q:"Berapa nada dalam satu oktaf?", opts:["5","6","7","8"], ans:3 },
+    { q: "Not 'do' dalam angka dilambangkan dengan...", opts: ["2", "3", "1", "4"], ans: 2 },
+    { q: "Tanda kunci treble (sol) digunakan untuk...", opts: ["Nada bass", "Nada tinggi", "Nada sedang", "Nada perkusi"], ans: 1 },
+    { q: "Berapa nada dalam satu oktaf?", opts: ["5", "6", "7", "8"], ans: 3 },
+    { q: "Jika angka 3 dalam notasi angka dibaca sebagai 'mi', maka angka 5 dibaca sebagai...", opts: ["fa", "sol", "la", "si"], ans: 1 },
+    { q: "Lima garis lurus horizontal tempat untuk menuliskan not balok disebut...", opts: ["Garis Birama", "Garis Paranada", "Kunci Nada", "Garis Dinamika"], ans: 1 },
+    { q: "Simbol titik (.) yang berada di atas angka pada notasi angka menandakan bahwa nada tersebut...", opts: ["Dinyanyikan lebih panjang", "Merupakan nada tinggi", "Merupakan nada rendah", "Harus berhenti/istirahat"], ans: 1 },
+    { q: "Dalam tangga nada diatonis mayor, urutan solmisasi setelah nada 'la' (6) adalah...", opts: ["do (1)", "re (2)", "sol (5)", "si (7)"], ans: 3 },
+    { q: "Notasi angka 0 (nol) dalam sebuah lembar musik berarti...", opts: ["Nada do rendah", "Tanda diam (istirahat)", "Lagu selesai", "Suara harus sangat keras"], ans: 1 },
+    { q: "Bentuk bulatan hitam berbendera satu (𝅘𝅥) pada not balok melambangkan jenis not...", opts: ["Not Penuh", "Not Setengah", "Not Seperempat", "Not Seperdelapan"], ans: 2 },
+    { q: "Simbol titik (.) yang diletakkan tepat di belakang/samping sebuah not berfungsi untuk...", opts: ["Menaikkan nada setengah laras", "Menambah durasi panjang nilai not tersebut", "Menurunkan nada setengah laras", "Membuat nada menjadi patah-patah"], ans: 1 },
   ],
 };
 
@@ -267,92 +305,96 @@ export default function App() {
 
   // SCREEN SISWA BIASA (MAIN SCREEN)
   return (
+  // SCREEN SISWA BIASA (MAIN SCREEN)
+
+    // SCREEN SISWA BIASA (MAIN SCREEN)
+
     <div style={{ width: "100%", minHeight: "100vh", background: "#f8fafc", display: "flex", justifyContent: "center" }}>
       <div style={{ 
-        width: "100%", maxWidth: "450px", minHeight: "100vh", background: "#fff", 
+        width: "100%", maxWidth: "450px", height: "100vh", background: "#fff", 
         display: "flex", flexDirection: "column", position: "relative",
         boxShadow: "0 0 20px rgba(0,0,0,0.05)",
-        paddingBottom: "110px" 
+        paddingBottom: "0px", // ✨ Sudah 0px agar space putih hilang total
+        boxSizing: "border-box" 
       }}>
         
-        {tab === "home" && (
-          <Home user={user} setTab={handleTabChange} 
-                onOpenEksplorasi={() => setTab("eksplorasi")} 
-                onOpenKuis={() => setTab("kuis")} 
-                onOpenAlatMusik={() => setTab("alatmusik")}
-                onOpenPengembang={() => setTab("pengembang")} />
-        )}
+        {/* 🔥 SEKARANG DI SINI TEMPATNYA (Pembungkus Konten Internal) */}
+        <div style={{ flex: 1, overflowY: "auto", paddingBottom: "70px", boxSizing: "border-box" }}>
+          
+          {tab === "home" && (
+            <Home user={user} setTab={handleTabChange} 
+                  onOpenEksplorasi={() => setTab("eksplorasi")} 
+                  onOpenKuis={() => setTab("kuis")} 
+                  onOpenAlatMusik={() => setTab("alatmusik")}
+                  onOpenPengembang={() => setTab("pengembang")} />
+          )}
 
-        {tab === "pengembang" && (
-          <ProfilPengembangPage onBack={() => setTab("home")} />
-        )}
+          {tab === "pengembang" && (
+            <ProfilPengembangPage onBack={() => setTab("home")} />
+          )}
 
-        {tab === "materi" && (
-          materiActiveId ? (
-            <MateriDetail 
-              id={materiActiveId} 
+          {tab === "materi" && (
+            materiActiveId ? (
+              <MateriDetail 
+                id={materiActiveId} 
+                user={user} 
+                onBack={() => setMateriActiveId(null)}
+                onCompleteMateri={(currentId) => {
+                  const currentIdx = MATERI_LIST.findIndex(x => x.id === currentId);
+                  if (currentIdx !== -1 && currentIdx === user.progress) {
+                    updateUserProgressInDb({ progress: Math.min(user.progress + 1, MATERI_LIST.length) });
+                  }
+                  
+                  if (currentIdx !== -1 && currentIdx + 1 < MATERI_LIST.length) {
+                    setMateriActiveId(MATERI_LIST[currentIdx + 1].id);
+                    
+                    setTimeout(() => {
+                      const containers = document.querySelectorAll("div");
+                      containers.forEach((div) => {
+                        if (div.style.overflowY === "auto" || div.style.overflowY === "scroll" || div.scrollTop > 0) {
+                          div.scrollTop = 0; 
+                        }
+                      });
+                      window.scrollTo(0, 0);
+                    }, 50);
+
+                  } else {
+                    alert("Selamat! Semua bab materi telah selesai kamu pelajari! 🥳");
+                    setMateriActiveId(null);
+                  }
+                }}
+              />
+            ) : (
+              <MateriPage user={user} onOpenDetail={(id) => setMateriActiveId(id)} />
+            )
+          )}
+
+          {tab === "latihan" && (
+            latihanActiveId ? (
+              <LatihanSoalCore type={latihanActiveId} onBack={() => setLatihanActiveId(null)} />
+            ) : (
+              <LatihanPage onSelectLatihan={(id) => setLatihanActiveId(id)} />
+            )
+          )}
+
+          {tab === "profil" && <ProfilPage user={user} onLogout={handleLogout} onBack={() => setTab("home")}   />}
+          {tab === "eksplorasi" && <EksplorasiPage onBack={() => setTab("home")} />}
+          
+          {tab === "kuis" && (
+            <KuisCore 
               user={user} 
-              onBack={() => setMateriActiveId(null)}
-              onCompleteMateri={(currentId) => {
-  const currentIdx = MATERI_LIST.findIndex(x => x.id === currentId);
-  if (currentIdx !== -1 && currentIdx === user.progress) {
-    updateUserProgressInDb({ progress: Math.min(user.progress + 1, MATERI_LIST.length) });
-  }
-  
-  if (currentIdx !== -1 && currentIdx + 1 < MATERI_LIST.length) {
-    // 1. Ganti ID materi ke materi berikutnya
-    setMateriActiveId(MATERI_LIST[currentIdx + 1].id);
-    
-    // 2. OTOMATIS PAKSA SCROLL CONTAINER KE ATAS LANGSUNG DI SINI
-    setTimeout(() => {
-      // Cari elemen div yang bertanggung jawab atas scroll di aplikasi kamu
-      // Kita cari berdasarkan properti style overflowY yang menampung halaman materi
-      const containers = document.querySelectorAll("div");
-      containers.forEach((div) => {
-        if (div.style.overflowY === "auto" || div.style.overflowY === "scroll" || div.scrollTop > 0) {
-          div.scrollTop = 0; // Paksa scroll internal ke paling atas
-        }
-      });
-      
-      // Tetap jalankan scroll layar utama browser sebagai cadangan
-      window.scrollTo(0, 0);
-    }, 50); // Diberi delay 50ms agar React selesai merender teks materi baru terlebih dahulu
-
-  } else {
-    alert("Selamat! Semua bab materi telah selesai kamu pelajari! 🥳");
-    setMateriActiveId(null);
-  }
-}}
+              onBack={() => setTab("home")} 
+              onSaveScore={(skor) => {
+                if (skor > (user?.quizBest || 0)) {
+                  updateUserProgressInDb({ quizBest: skor });
+                }
+              }} 
             />
-          ) : (
-            <MateriPage user={user} onOpenDetail={(id) => setMateriActiveId(id)} />
-          )
-        )}
+          )}
 
-        {tab === "latihan" && (
-          latihanActiveId ? (
-            <LatihanSoalCore type={latihanActiveId} onBack={() => setLatihanActiveId(null)} />
-          ) : (
-            <LatihanPage onSelectLatihan={(id) => setLatihanActiveId(id)} />
-          )
-        )}
+        </div> {/* 📌 Batas Akhir Pembungkus Konten Internal */}
 
-        {tab === "profil" && <ProfilPage user={user} onLogout={handleLogout} />}
-        {tab === "eksplorasi" && <EksplorasiPage onBack={() => setTab("home")} />}
-        
-        {tab === "kuis" && (
-          <KuisCore 
-            user={user} 
-            onBack={() => setTab("home")} 
-            onSaveScore={(skor) => {
-              if (skor > (user?.quizBest || 0)) {
-                updateUserProgressInDb({ quizBest: skor });
-              }
-            }} 
-          />
-        )}
-
-        {/* FOOTBAR FLOATING */}
+        {/* FOOTBAR FLOATING (Tetap di luar pembungkus scroll agar posisinya stabil) */}
         <BottomNav tab={tab} setTab={handleTabChange} />
       </div>
     </div>
@@ -775,14 +817,12 @@ function ProfilPengembangPage({ onBack }) {
     {
       nama: "Dr. H. Dadan F. Ramdhan, M.Ag., M.M.Pd.",
       role: "Dosen Pembimbing I",
-      identitas: "NIP / Dosen PGMI",
       avatar: "👨‍🏫",
       deskripsi: "Dr. H. Dadan F. Ramdhan, M.Ag.,M.M.Pd. merupakan dosen Pendidikan Guru Madrasah Ibtidaiyah UIN Sunan Gunung Djati Bandung yang bertindak sebagai pembimbing dalam penyusunan dan validasi media pembelajaran ini."
     },
     {
       nama: "Kawuryansih Widowati, M.A.",
       role: "Dosen Pembimbing II",
-      identitas: "NIP / Dosen PGMI",
       avatar: "👩‍🏫",
       deskripsi: "Kawuryansih Widowati, M.A merupakan dosen Pendidikan Guru Madrasah Ibtidaiyah UIN Sunan Gunung Djati Bandung yang turut membimbing, memberikan arahan materi, serta meneliti kesesuaian unsur musik untuk tingkat SD/MI."
     }
@@ -933,13 +973,29 @@ function MateriDetail({ id,  onBack, onCompleteMateri }) {
           <span style={{ fontSize: "0.8rem", color: "#166534", display: "block" }}><b>💡 Contoh Sederhana:</b> {d.contoh}</span>
         </div>
 
-        {/* 📺 7. TUTORIAL MANUAL PETUNJUK VIDEO (POIN 7) */}
-        <div style={{ background: "#fff7ed", border: "1px dashed #f97316", padding: "10px 12px", borderRadius: 10, fontSize: "0.78rem", color: "#c2410c", lineHeight: "1.4" }}>
-          <b style={{ display: "block", marginBottom: "3px" }}>📺 Petunjuk Memutar Video Pembelajaran:</b>
-          • Klik ikon tombol segitiga tepat di tengah layar untuk <b>Memulai Video</b>.<br />
-          • Klik lambang kotak di kanan pojok bawah bingkai untuk <b>Memperbesar (Fullscreen)</b>.<br />
-          • Klik lambang kotak itu lagi atau pencet tombol 'ESC' untuk <b>Mengecilkan Layar Kembali</b>.
-        </div>
+{/* 📺 7. TUTORIAL MANUAL PETUNJUK VIDEO (POIN 7) */}
+<div style={{ background: "#fff7ed", border: "1px dashed #f97316", padding: "10px 12px", borderRadius: 10, fontSize: "0.78rem", color: "#c2410c", lineHeight: "1.4", textAlign: "left" }}>
+  
+  {/* Style tag khusus untuk animasi denjut (pulse) pada emoji TV */}
+  <style>{`
+    @keyframes tvPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+  `}</style>
+
+  <b style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "5px", textAlign: "left" }}>
+    <span style={{ display: "inline-block", animation: "tvPulse 2s infinite ease-in-out" }}>📺</span> 
+    Petunjuk Memutar Video Pembelajaran:
+  </b>
+  
+  <div style={{ display: "flex", flexDirection: "column", gap: "4px", paddingLeft: "4px", textAlign: "left" }}>
+    <div style={{ textAlign: "left" }}>▶️ <b>Klik ikon tombol segitiga</b> tepat di tengah layar untuk memutar video.</div>
+    <div style={{ textAlign: "left" }}>🔲 <b>Klik lambang kotak</b> di pojok kanan bawah bingkai untuk memperbesar layar (Fullscreen).</div>
+    <div style={{ textAlign: "left" }}>🔄 <b>Klik lambang kotak itu lagi</b> atau tekan tombol <b>'ESC'</b> di keyboard untuk mengecilkan layar kembali.</div>
+  </div>
+</div>
 
         {/* Bingkai Pemutar Video */}
         <div style={{ width: "100%", height: "200px", background: "#000", borderRadius: 14, overflow: "hidden" }}>
@@ -982,36 +1038,186 @@ function LatihanPage({ onSelectLatihan, onBack }) {
 function LatihanSoalCore({ type, onBack }) {
   const listSoal = LATIHAN_SOAL[type] || LATIHAN_SOAL["tempo"];
   const [idx, setIdx] = useState(0);
+  
+  // State Baru untuk Logika Warna & Skor
+  const [selectedOpt, setSelectedOpt] = useState(null); // Opsi yang dipilih user
+  const [isAnswered, setIsAnswered] = useState(false);  // Apakah soal ini sudah dijawab
+  const [score, setScore] = useState({ benar: 0, salah: 0 }); // Rekap skor akhir
+  const [showSummary, setShowSummary] = useState(false); // Flag untuk menampilkan ringkasan akhir
+
+  // Fungsi saat opsi jawaban diklik
+  const handleAnswerClick = (oIdx, correctAns) => {
+    if (isAnswered) return; // Mencegah klik ganda jika sudah dijawab
+
+    setSelectedOpt(oIdx);
+    setIsAnswered(true);
+
+    // Update Skor
+    if (oIdx === correctAns) {
+      setScore(p => ({ ...p, benar: p.benar + 1 }));
+    } else {
+      setScore(p => ({ ...p, salah: p.salah + 1 }));
+    }
+
+    // Otomatis beralih ke soal berikutnya setelah jeda 1 detik (1000 milidetik)
+    setTimeout(() => {
+      if (idx < listSoal.length - 1) {
+        setIdx(p => p + 1);
+        // Reset state untuk soal berikutnya
+        setSelectedOpt(null);
+        setIsAnswered(false);
+      } else {
+        // Jika sudah di soal terakhir, tampilkan ringkasan
+        setShowSummary(true);
+      }
+    }, 1000);
+  };
+
+  // Fungsi untuk reset latihan jika ingin mengulang kembali
+  const handleRestart = () => {
+    setIdx(0);
+    setSelectedOpt(null);
+    setIsAnswered(false);
+    setScore({ benar: 0, salah: 0 });
+    setShowSummary(false);
+  };
+
+  // TAMPILKAN RINGKASAN DI AKHIR SOAL
+  if (showSummary) {
+    return (
+      <div style={{ flex: 1, overflowY: "auto", paddingBottom: "30px", background: "#fcf9ff", minHeight: "100vh" }}>
+        <Header title={`Hasil Uji ${type.toUpperCase()}`} sub="Selesai Latihan" onBack={onBack} />
+        <div style={{ padding: "1.5rem", textAlign: "center" }}>
+          
+          <div style={{ background: "#fff", padding: "2rem 1.5rem", borderRadius: 20, border: "1px solid #e9d5ff", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)" }}>
+            <span style={{ fontSize: "3rem" }}>🎉</span>
+            <h3 style={{ margin: "10px 0 5px 0", color: "#221c7a" }}>Latihan Selesai!</h3>
+            <p style={{ margin: "0 0 1.5rem 0", fontSize: "0.85rem", color: "#64748b" }}>Berikut adalah rangkuman hasil jawaban kamu:</p>
+            
+            {/* Box Keterangan Benar / Salah */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
+              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "1rem", borderRadius: 14 }}>
+                <div style={{ fontSize: "1.5rem" }}>✅</div>
+                <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#166534" }}>{score.benar}</div>
+                <div style={{ fontSize: "0.75rem", color: "#166534" }}>Jawaban Benar</div>
+              </div>
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", padding: "1rem", borderRadius: 14 }}>
+                <div style={{ fontSize: "1.5rem" }}>❌</div>
+                <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#991b1b" }}>{score.salah}</div>
+                <div style={{ fontSize: "0.75rem", color: "#991b1b" }}>Jawaban Salah</div>
+              </div>
+            </div>
+
+            {/* Tombol Aksi di Akhir */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <button onClick={handleRestart} style={{ padding: "0.8rem", borderRadius: 12, border: "none", background: "#7c3aed", color: "#fff", fontWeight: "bold", cursor: "pointer" }}>
+                🔄 Ulangi Latihan
+              </button>
+              <button onClick={onBack} style={{ padding: "0.8rem", borderRadius: 12, border: "1px solid #cbd5e1", background: "#fff", color: "#475569", fontWeight: "bold", cursor: "pointer" }}>
+                ⬅️ Kembali ke Menu
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
+  // TAMPILKAN HALAMAN SOAL (SEDANG BERJALAN)
+  const currentSoal = listSoal[idx];
 
   return (
     <div style={{ flex: 1, overflowY: "auto", paddingBottom: "30px" }}>
-      <Header title={`Uji ${type.toUpperCase()}`} sub={`Soal Latihan nomor ${idx + 1}`} onBack={onBack} />
+      <Header title={`Uji ${type.toUpperCase()}`} sub={`Soal Latihan nomor ${idx + 1} dari ${listSoal.length}`} onBack={onBack} />
       <div style={{ padding: "1rem" }}>
         
         <div style={{ background: "#fee2e2", padding: "8px 12px", borderRadius: 8, fontSize: "0.75rem", color: "#991b1b", marginBottom: "1rem" }}>
-          ℹ️ <b>Info Bebas:</b> Kamu bisa langsung berpindah menu lewat tombol navigasi bar bawah kapan saja jika ingin membatalkan latihan ini. (Poin 8)
+          ℹ️ <b>Info Bebas:</b> Kamu bisa langsung berpindah menu lewat tombol navigasi bar bawah kapan saja jika ingin membatalkan latihan ini.
         </div>
 
+        {/* Kard Soal */}
         <div style={{ background: "#fff", padding: "1.1rem", borderRadius: 14, border: "1px solid #f0e8ff", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
-          <p style={{ margin: "0 0 1rem 0", fontWeight: 700, fontSize: "0.92rem", color: "#221c7a" }}>{listSoal[idx].q}</p>
+          <p style={{ margin: "0 0 1rem 0", fontWeight: 700, fontSize: "0.92rem", color: "#221c7a" }}>{currentSoal.q}</p>
+          
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {listSoal[idx].opts.map((o, oIdx) => (
-              <button key={oIdx} onClick={() => { alert(oIdx === listSoal[idx].ans ? "Jawabanmu Benar! 🎉" : "Kurang tepat, coba lagi ya!"); }}
-                style={{ padding: "0.75rem", textAlign: "left", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 10, fontSize: "0.85rem", cursor: "pointer" }}>
-                {o}
-              </button>
-            ))}
+            {currentSoal.opts.map((o, oIdx) => {
+              // Konstanta Penentu Warna Logika Dinamis
+              const isCorrectOpt = oIdx === currentSoal.ans;
+              const isSelectedOpt = oIdx === selectedOpt;
+
+              let btnBg = "#f9fafb";
+              let btnBorder = "1px solid #e5e7eb";
+              let btnColor = "#1f2937";
+
+              // Jika sudah dijawab, ubah styling warnanya secara real-time
+              if (isAnswered) {
+                if (isCorrectOpt) {
+                  // Jawaban yang benar selalu berubah jadi hijau
+                  btnBg = "#dcfce7";
+                  btnBorder = "2px solid #22c55e";
+                  btnColor = "#15803d";
+                } else if (isSelectedOpt) {
+                  // Jika yang dipilih user salah, berubah jadi merah
+                  btnBg = "#fee2e2";
+                  btnBorder = "2px solid #ef4444";
+                  btnColor = "#b91c1c";
+                }
+              }
+
+              return (
+                <button 
+                  key={oIdx} 
+                  disabled={isAnswered} // Blokir tombol saat proses jeda timeout menuju soal berikutnya
+                  onClick={() => handleAnswerClick(oIdx, currentSoal.ans)}
+                  style={{ 
+                    padding: "0.75rem", 
+                    textAlign: "left", 
+                    background: btnBg, 
+                    border: btnBorder, 
+                    color: btnColor,
+                    borderRadius: 10, 
+                    fontSize: "0.85rem", 
+                    cursor: isAnswered ? "not-allowed" : "pointer",
+                    transition: "all 0.2s ease"
+                  }}
+                >
+                  {/* Tambahan visual penanda simbol emoji */}
+                  {isAnswered && isCorrectOpt && "✅ "}
+                  {isAnswered && isSelectedOpt && !isCorrectOpt && "❌ "}
+                  {o}
+                </button>
+              );
+            })}
           </div>
         </div>
 
+        {/* Navigasi Manual Bawah */}
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: "1rem" }}>
-          <button disabled={idx === 0} onClick={() => setIdx(p => p - 1)} style={{ padding: "0.5rem 1rem", borderRadius: 8, border: "none", background: "#cbd5e1", cursor: "pointer" }}>Sebelumnya</button>
-          {idx < listSoal.length - 1 ? (
-            <button onClick={() => setIdx(p => p + 1)} style={{ padding: "0.5rem 1rem", borderRadius: 8, border: "none", background: "#7c3aed", color: "#fff", cursor: "pointer" }}>Selanjutnya</button>
-          ) : (
-            <button onClick={onBack} style={{ padding: "0.5rem 1rem", borderRadius: 8, border: "none", background: "#22c55e", color: "#fff", cursor: "pointer" }}>Selesai Latihan</button>
-          )}
+          <button 
+            disabled={idx === 0 || isAnswered} 
+            onClick={() => setIdx(p => p - 1)} 
+            style={{ padding: "0.5rem 1rem", borderRadius: 8, border: "none", background: "#cbd5e1", cursor: "pointer", fontSize: "0.8rem" }}
+          >
+            Sebelumnya
+          </button>
+          
+          <button 
+            onClick={() => {
+              if (idx < listSoal.length - 1) {
+                setIdx(p => p + 1);
+                setSelectedOpt(null);
+                setIsAnswered(false);
+              } else {
+                setShowSummary(true);
+              }
+            }} 
+            style={{ padding: "0.5rem 1rem", borderRadius: 8, border: "none", background: "#7c3aed", color: "#fff", cursor: "pointer", fontSize: "0.8rem" }}
+          >
+            {idx < listSoal.length - 1 ? "Lewati Soal" : "Lihat Hasil"}
+          </button>
         </div>
+
       </div>
     </div>
   );
@@ -1022,66 +1228,233 @@ function KuisCore({ user, onBack, onSaveScore }) {
   const [start, setStart] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState({});
+  
+  // State Baru untuk Feedback Warna, Skor Real-time, dan Layar Ringkasan Akhir
+  const [isAnswered, setIsAnswered] = useState(false);
+  const [selectedOpt, setSelectedOpt] = useState(null);
+  const [score, setScore] = useState({ benar: 0, salah: 0 });
+  const [showSummary, setShowSummary] = useState(false);
 
-  if (!start) {
+  // Fungsi saat opsi jawaban diklik (Mirip logika latihan)
+  const handleAnswerClick = (oIdx, correctAns) => {
+    if (isAnswered) return; // Kunci tombol agar tidak bisa double-click saat transisi
+
+    setSelectedOpt(oIdx);
+    setIsAnswered(true);
+    
+    // Simpan jawaban ke dalam state answers bawaan
+    const updatedAnswers = { ...answers, [currentIdx]: oIdx };
+    setAnswers(updatedAnswers);
+
+    // Hitung skor benar / salah langsung
+    let isCorrect = oIdx === correctAns;
+    if (isCorrect) {
+      setScore(p => ({ ...p, benar: p.benar + 1 }));
+    } else {
+      setScore(p => ({ ...p, salah: p.salah + 1 }));
+    }
+
+    // Beri jeda 1 detik agar user bisa melihat feedback warna, lalu otomatis next
+    setTimeout(() => {
+      if (currentIdx < QUIZ_QUESTIONS.length - 1) {
+        setCurrentIdx(p => p + 1);
+        // Reset state pembantu untuk nomor berikutnya
+        setIsAnswered(false);
+        setSelectedOpt(null);
+      } else {
+        // Jika nomor terakhir, langsung kalkulasi nilai total % dan kirim ke parent
+        const totalBetul = isCorrect ? score.benar + 1 : score.benar;
+        const totalSkor = Math.round((totalBetul / QUIZ_QUESTIONS.length) * 100);
+        onSaveScore(totalSkor);
+        setShowSummary(true);
+      }
+    }, 1000);
+  };
+
+  // Fungsi mengulangi kuis dari awal
+  const handleRestartQuiz = () => {
+    setCurrentIdx(0);
+    setAnswers({});
+    setIsAnswered(false);
+    setSelectedOpt(null);
+    setScore({ benar: 0, salah: 0 });
+    setShowSummary(false);
+    setStart(true);
+  };
+
+  // --- 1. LAYAR UTAMA (SEBELUM MULAI) ---
+  if (!start && !showSummary) {
     return (
-      <div style={{ flex: 1, padding: "1rem", textAlign: "center", fontFamily: "system-ui" }}>
+      <div style={{ flex: 1, padding: "1rem", textAlign: "center", fontFamily: "system-ui", background: "#fcf9ff", minHeight: "100vh" }}>
         <Header title="Evaluasi Kuis" sub="Uji Nilai Akhir" onBack={onBack} />
         <div style={{ padding: "2rem 1rem" }}>
           <span style={{ fontSize: "3rem" }}>🏆</span>
-          <h3 style={{ margin: "10px 0" }}>Kuis Besar MUSIKAMI</h3>
-          <p style={{ fontSize: "0.85rem", color: "#666" }}>Skor Tertinggi Kamu Saat Ini: <b>{user?.quizBest || 0} / 100</b></p>
-          <button onClick={() => setStart(true)} style={{ marginTop: "1rem", padding: "0.85rem 2rem", background: "#7c3aed", color: "#fff", border: "none", borderRadius: 12, fontWeight: 700, cursor: "pointer" }}>Mulai Kuis Sekarang</button>
+          <h3 style={{ margin: "10px 0", color: "#221c7a" }}>Kuis Besar MUSIKAMI</h3>
+          <p style={{ fontSize: "0.85rem", color: "#64748b" }}>Skor Tertinggi Kamu Saat Ini: <b style={{ color: "#7c3aed" }}>{user?.quizBest || 0} / 100</b></p>
+          <button onClick={() => setStart(true)} style={{ marginTop: "1rem", padding: "0.85rem 2rem", background: "#7c3aed", color: "#fff", border: "none", borderRadius: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 10px rgba(124, 58, 237, 0.2)" }}>Mulai Kuis Sekarang</button>
         </div>
       </div>
     );
   }
 
-  const handleFinish = () => {
-    let betul = 0;
-    QUIZ_QUESTIONS.forEach((q, i) => { if (answers[i] === q.ans) betul++; });
-    const totalSkor = Math.round((betul / QUIZ_QUESTIONS.length) * 100);
-    onSaveScore(totalSkor);
-    alert(`Kuis selesai! Skor pencapaian ujianmu: ${totalSkor} / 100`);
-    setStart(false);
-    setCurrentIdx(0);
-    setAnswers({});
-    onBack();
-  };
+  // --- 2. LAYAR RINGKASAN SKOR AKHIR (REKAPITULASI JAWABAN) ---
+  if (showSummary) {
+    const finalScore = Math.round((score.benar / QUIZ_QUESTIONS.length) * 100);
+    return (
+      <div style={{ flex: 1, overflowY: "auto", paddingBottom: "30px", background: "#fcf9ff", minHeight: "100vh", fontFamily: "system-ui" }}>
+        <Header title="Hasil Evaluasi Kuis" sub="Kuis Selesai" onBack={onBack} />
+        <div style={{ padding: "1.5rem", textAlign: "center" }}>
+          
+          <div style={{ background: "#fff", padding: "2rem 1.5rem", borderRadius: 20, border: "1px solid #e9d5ff", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)" }}>
+            <span style={{ fontSize: "3.5rem" }}>🎖️</span>
+            <h3 style={{ margin: "10px 0 5px 0", color: "#221c7a", fontSize: "1.3rem" }}>Nilai Hasil Ujian</h3>
+            
+            {/* Skor Besar */}
+            <div style={{ fontSize: "3rem", fontWeight: 900, color: finalScore >= 70 ? "#22c55e" : "#ef4444", margin: "0.5rem 0 1.5rem 0" }}>
+              {finalScore} <span style={{ fontSize: "1.2rem", color: "#64748b", fontWeight: "normal" }}>/ 100</span>
+            </div>
+            
+            {/* Box Rincian Benar / Salah */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
+              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "0.8rem", borderRadius: 14 }}>
+                <div style={{ fontSize: "1.3rem" }}>✅</div>
+                <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#166534" }}>{score.benar}</div>
+                <div style={{ fontSize: "0.75rem", color: "#166534" }}>Benar</div>
+              </div>
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", padding: "0.8rem", borderRadius: 14 }}>
+                <div style={{ fontSize: "1.3rem" }}>❌</div>
+                <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#991b1b" }}>{score.salah}</div>
+                <div style={{ fontSize: "0.75rem", color: "#991b1b" }}>Salah</div>
+              </div>
+            </div>
+
+            {/* Tombol Aksi Akhir */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <button onClick={handleRestartQuiz} style={{ padding: "0.85rem", borderRadius: 12, border: "none", background: "#7c3aed", color: "#fff", fontWeight: "bold", cursor: "pointer" }}>
+                🔄 Ulangi Kuis
+              </button>
+              <button onClick={onBack} style={{ padding: "0.85rem", borderRadius: 12, border: "1px solid #cbd5e1", background: "#fff", color: "#475569", fontWeight: "bold", cursor: "pointer" }}>
+                ⬅️ Selesai & Kembali
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
+  // --- 3. LAYAR JALANNYA KUIS (PERTANYAAN AKTIF) ---
+  const currentQuestion = QUIZ_QUESTIONS[currentIdx];
 
   return (
-    <div style={{ flex: 1, overflowY: "auto" }}>
+    <div style={{ flex: 1, overflowY: "auto", fontFamily: "system-ui", background: "#fcf9ff", minHeight: "100vh" }}>
       <Header title="Kuis Kompetensi" sub={`Pertanyaan ${currentIdx + 1} dari ${QUIZ_QUESTIONS.length}`} />
       <div style={{ padding: "1rem" }}>
-        <p style={{ fontWeight: 700, fontSize: "0.95rem", marginBottom: "1rem" }}>{QUIZ_QUESTIONS[currentIdx].q}</p>
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "1.5rem" }}>
-          {QUIZ_QUESTIONS[currentIdx].opts.map((opt, oIdx) => (
-            <button key={oIdx} onClick={() => setAnswers({ ...answers, [currentIdx]: oIdx })}
-              style={{ padding: "0.8rem", textAlign: "left", borderRadius: 10, border: answers[currentIdx] === oIdx ? "2px solid #7c3aed" : "1px solid #e5e7eb", background: answers[currentIdx] === oIdx ? "#f3e8ff" : "#fff", cursor: "pointer" }}>
-              {opt}
-            </button>
-          ))}
+        
+        {/* Kard Soal */}
+        <div style={{ background: "#fff", padding: "1.2rem", borderRadius: 16, border: "1px solid #f0e8ff", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.01)", marginBottom: "1.5rem" }}>
+          <p style={{ fontWeight: 700, fontSize: "0.95rem", marginBottom: "1.2rem", color: "#221c7a", lineHeight: "1.4" }}>{currentQuestion.q}</p>
+          
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {currentQuestion.opts.map((opt, oIdx) => {
+              const isCorrectOpt = oIdx === currentQuestion.ans;
+              const isSelectedOpt = oIdx === selectedOpt;
+
+              // Default Style (Sebelum Diklik)
+              let btnBg = "#fff";
+              let btnBorder = "1px solid #e5e7eb";
+              let btnColor = "#1f2937";
+
+              // Logika Pewarnaan Instan Setelah Menjawab
+              if (isAnswered) {
+                if (isCorrectOpt) {
+                  btnBg = "#dcfce7";      // Hijau jika opsi ini benar
+                  btnBorder = "2px solid #22c55e";
+                  btnColor = "#15803d";
+                } else if (isSelectedOpt) {
+                  btnBg = "#fee2e2";      // Merah jika pilihan user salah
+                  btnBorder = "2px solid #ef4444";
+                  btnColor = "#b91c1c";
+                }
+              }
+
+              return (
+                <button 
+                  key={oIdx} 
+                  disabled={isAnswered} // Mengunci klik tombol selama jeda perpindahan otomatis
+                  onClick={() => handleAnswerClick(oIdx, currentQuestion.ans)}
+                  style={{ 
+                    padding: "0.85rem", 
+                    textAlign: "left", 
+                    borderRadius: 12, 
+                    border: btnBorder, 
+                    background: btnBg, 
+                    color: btnColor,
+                    fontSize: "0.88rem",
+                    fontWeight: isSelectedOpt || (isAnswered && isCorrectOpt) ? "600" : "normal",
+                    cursor: isAnswered ? "not-allowed" : "pointer",
+                    transition: "all 0.2s ease",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px"
+                  }}
+                >
+                  {isAnswered && isCorrectOpt && "✅"}
+                  {isAnswered && isSelectedOpt && !isCorrectOpt && "❌"}
+                  <span>{opt}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* 🔘 9. NAVIGASI TOMBOL PERTANYAAN SEBELUMNYA & SESUDAHNYA (POIN 9) */}
+        {/* 🔘 NAVIGASI TOMBOL (Sesuai Poin 9) */}
         <div style={{ display: "flex", gap: "10px" }}>
-          <button disabled={currentIdx === 0} onClick={() => setCurrentIdx(p => p - 1)}
-            style={{ flex: 1, padding: "0.75rem", background: currentIdx === 0 ? "#e5e7eb" : "#64748b", color: currentIdx === 0 ? "#9ca3af" : "#fff", border: "none", borderRadius: 10, fontWeight: 600, cursor: currentIdx === 0 ? "not-allowed" : "pointer" }}>
+          <button 
+            disabled={currentIdx === 0 || isAnswered} 
+            onClick={() => setCurrentIdx(p => p - 1)}
+            style={{ 
+              flex: 1, 
+              padding: "0.75rem", 
+              background: (currentIdx === 0 || isAnswered) ? "#e5e7eb" : "#64748b", 
+              color: (currentIdx === 0 || isAnswered) ? "#9ca3af" : "#fff", 
+              border: "none", 
+              borderRadius: 10, 
+              fontWeight: 600, 
+              cursor: (currentIdx === 0 || isAnswered) ? "not-allowed" : "pointer",
+              fontSize: "0.8rem"
+            }}
+          >
             ⬅️ Soal Sebelumnya
           </button>
 
-          {currentIdx < QUIZ_QUESTIONS.length - 1 ? (
-            <button onClick={() => setCurrentIdx(p => p + 1)}
-              style={{ flex: 1, padding: "0.75rem", background: "#7c3aed", color: "#fff", border: "none", borderRadius: 10, fontWeight: 600, cursor: "pointer" }}>
-              Soal Selanjutnya ➡️
-            </button>
-          ) : (
-            <button onClick={handleFinish}
-              style={{ flex: 1, padding: "0.75rem", background: "#22c55e", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, cursor: "pointer" }}>
-              Selesai & Kirim 💾
-            </button>
-          )}
+          <button 
+            onClick={() => {
+              if (currentIdx < QUIZ_QUESTIONS.length - 1) {
+                setCurrentIdx(p => p + 1);
+                setIsAnswered(false);
+                setSelectedOpt(null);
+              } else {
+                setShowSummary(true);
+              }
+            }}
+            style={{ 
+              flex: 1, 
+              padding: "0.75rem", 
+              background: currentIdx < QUIZ_QUESTIONS.length - 1 ? "#7c3aed" : "#22c55e", 
+              color: "#fff", 
+              border: "none", 
+              borderRadius: 10, 
+              fontWeight: 700, 
+              cursor: "pointer",
+              fontSize: "0.8rem"
+            }}
+          >
+            {currentIdx < QUIZ_QUESTIONS.length - 1 ? "Lewati Soal ➡️" : "Lihat Hasil Ujian 💾"}
+          </button>
         </div>
+
       </div>
     </div>
   );
@@ -1185,6 +1558,7 @@ function EksplorasiPage({ onBack }) { // <-- Ditambahkan props onBack untuk tomb
       if (!AudioContext) return;
       
       const ctx = new AudioContext();
+      let totalDuration = 0; // untuk melacak kapan tombol kembali normal
       
       // 1. LOGIKA UNTUK BUNYI TEMPO (Bunyi ketukan Metronome)
       if (type === 'tempo') {
@@ -1193,7 +1567,8 @@ function EksplorasiPage({ onBack }) { // <-- Ditambahkan props onBack untuk tomb
         if (name === 'Allegro') bpm = 160; // Cepat
         
         const interval = 60 / bpm;
-        // Simulasikan 3 ketukan metronome beruntun sesuai kecepatan tempo
+        
+        // --- LOGIKA SUARA ASLI (TIDAK BERUBAH) ---
         for (let i = 0; i < 3; i++) {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
@@ -1205,15 +1580,23 @@ function EksplorasiPage({ onBack }) { // <-- Ditambahkan props onBack untuk tomb
           osc.start(ctx.currentTime + (i * interval));
           osc.stop(ctx.currentTime + (i * interval) + 0.1);
         }
+
+        // --- LOGIKA TOMBOL BERWARNA ---
+        setActiveTempo(name.toLowerCase());
+        totalDuration = ((2 * interval) + 0.1) * 1000; // Durasi total 3 ketukan dalam md
+        setTimeout(() => setActiveTempo(null), totalDuration);
       }
       
       // 2. LOGIKA UNTUK BUNYI IRAMA (Simulasi pola Tepuk Tangan/Perkusi)
       else if (type === 'irama') {
         let count = 4; // Default 4/4
-        if (name === '2/4') count = 2;
-        if (name === '3/4') count = 3;
+        let stateKey = '44';
+        if (name === '2/4') { count = 2; stateKey = '24'; }
+        if (name === '3/4') { count = 3; stateKey = '34'; }
         
         const interval = 0.4; // Jeda antar ketukan tetap
+        
+        // --- LOGIKA SUARA ASLI (TIDAK BERUBAH) ---
         for (let i = 0; i < count; i++) {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
@@ -1230,6 +1613,11 @@ function EksplorasiPage({ onBack }) { // <-- Ditambahkan props onBack untuk tomb
           osc.start(ctx.currentTime + (i * interval));
           osc.stop(ctx.currentTime + (i * interval) + 0.15);
         }
+
+        // --- LOGIKA TOMBOL BERWARNA ---
+        setActiveIrama(stateKey);
+        totalDuration = (((count - 1) * interval) + 0.15) * 1000; // Durasi ketukan dalam md
+        setTimeout(() => setActiveIrama(null), totalDuration);
       }
       
       // 3. LOGIKA UNTUK BUNYI DINAMIKA (Nada Piano Lembut vs Keras)
@@ -1243,12 +1631,17 @@ function EksplorasiPage({ onBack }) { // <-- Ditambahkan props onBack untuk tomb
         // Atur volume (Gain) berdasarkan pilihan dinamika
         const volume = name === 'Keras' ? 0.6 : 0.08; 
         
+        // --- LOGIKA SUARA ASLI (TIDAK BERUBAH) ---
         gain.gain.setValueAtTime(volume, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start();
         osc.stop(ctx.currentTime + 0.6);
+
+        // --- LOGIKA TOMBOL BERWARNA ---
+        setActiveDinamika(name.toLowerCase());
+        setTimeout(() => setActiveDinamika(null), 600); // 0.6 detik = 600 md
       }
       
     } catch (e) {
@@ -1261,7 +1654,6 @@ function EksplorasiPage({ onBack }) { // <-- Ditambahkan props onBack untuk tomb
       
       {/* 🟣 1. HEADER GRADIENT DENGAN TOMBOL KEMBALI */}
       <div style={{ background: "linear-gradient(135deg, #3b82f6 0%, #ec4899 100%)", color: "#fff", padding: "1.5rem 1rem", display: "flex", alignItems: "center", gap: "1rem" }}>
-        {/* Hubungkan onClick ke properti onBack agar fungsi kembali ke home berjalan */}
         <button onClick={onBack} style={{ background: "none", border: "none", color: "#fff", fontSize: "1.5rem", cursor: "pointer", padding: 0 }}>
           &lt;
         </button>
@@ -1294,7 +1686,7 @@ function EksplorasiPage({ onBack }) { // <-- Ditambahkan props onBack untuk tomb
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.6rem" }}>
             {/* Lambat */}
             <div 
-              onClick={() => { setActiveTempo('largo'); playSound('tempo', 'Largo'); }}
+              onClick={() => playSound('tempo', 'Largo')}
               style={{ background: "#eff6ff", padding: "1rem 0.5rem", borderRadius: 16, textAlign: "center", cursor: "pointer", border: activeTempo === 'largo' ? "2px solid #3b82f6" : "2px solid transparent", transition: "0.2s" }}
             >
               <div style={{ fontSize: "1.6rem", marginBottom: "4px" }}>🐢</div>
@@ -1303,7 +1695,7 @@ function EksplorasiPage({ onBack }) { // <-- Ditambahkan props onBack untuk tomb
             </div>
             {/* Sedang */}
             <div 
-              onClick={() => { setActiveTempo('moderato'); playSound('tempo', 'Moderato'); }}
+              onClick={() => playSound('tempo', 'Moderato')}
               style={{ background: "#f0fdf4", padding: "1rem 0.5rem", borderRadius: 16, textAlign: "center", cursor: "pointer", border: activeTempo === 'moderato' ? "2px solid #22c55e" : "2px solid transparent", transition: "0.2s" }}
             >
               <div style={{ fontSize: "1.6rem", marginBottom: "4px" }}>🚶</div>
@@ -1312,7 +1704,7 @@ function EksplorasiPage({ onBack }) { // <-- Ditambahkan props onBack untuk tomb
             </div>
             {/* Cepat */}
             <div 
-              onClick={() => { setActiveTempo('allegro'); playSound('tempo', 'Allegro'); }}
+              onClick={() => playSound('tempo', 'Allegro')}
               style={{ background: "#fff1f2", padding: "1rem 0.5rem", borderRadius: 16, textAlign: "center", cursor: "pointer", border: activeTempo === 'allegro' ? "2px solid #f43f5e" : "2px solid transparent", transition: "0.2s" }}
             >
               <div style={{ fontSize: "1.6rem", marginBottom: "4px" }}>🐰</div>
@@ -1331,16 +1723,16 @@ function EksplorasiPage({ onBack }) { // <-- Ditambahkan props onBack untuk tomb
           {/* Grid Atas (2/4 dan 3/4) */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.8rem", marginBottom: "0.8rem" }}>
             <div 
-              onClick={() => { setActiveIrama('24'); playSound('irama', '2/4'); }}
-              style={{ background: "#f5f3ff", padding: "1.2rem 0.5rem", borderRadius: 16, textAlign: "center", cursor: "pointer", border: activeIrama === '24' ? "2px solid #7c3aed" : "2px solid transparent" }}
+              onClick={() => playSound('irama', '2/4')}
+              style={{ background: "#f5f3ff", padding: "1.2rem 0.5rem", borderRadius: 16, textAlign: "center", cursor: "pointer", border: activeIrama === '24' ? "2px solid #7c3aed" : "2px solid transparent", transition: "0.2s" }}
             >
               <div style={{ fontSize: "1.2rem", marginBottom: "4px" }}>👏👏</div>
               <b style={{ color: "#6d28d9", fontSize: "0.95rem", display: "block" }}>Birama 2/4</b>
               <span style={{ color: "#a78bfa", fontSize: "0.78rem" }}>Dua ketukan</span>
             </div>
             <div 
-              onClick={() => { setActiveIrama('34'); playSound('irama', '3/4'); }}
-              style={{ background: "#fdf2f8", padding: "1.2rem 0.5rem", borderRadius: 16, textAlign: "center", cursor: "pointer", border: activeIrama === '34' ? "2px solid #db2777" : "2px solid transparent" }}
+              onClick={() => playSound('irama', '3/4')}
+              style={{ background: "#fdf2f8", padding: "1.2rem 0.5rem", borderRadius: 16, textAlign: "center", cursor: "pointer", border: activeIrama === '34' ? "2px solid #db2777" : "2px solid transparent", transition: "0.2s" }}
             >
               <div style={{ fontSize: "1.2rem", marginBottom: "4px" }}>👏👏👏</div>
               <b style={{ color: "#be185d", fontSize: "0.95rem", display: "block" }}>Birama 3/4</b>
@@ -1350,8 +1742,8 @@ function EksplorasiPage({ onBack }) { // <-- Ditambahkan props onBack untuk tomb
 
           {/* Baris Bawah (4/4 Terbentang Lebar) */}
           <div 
-            onClick={() => { setActiveIrama('44'); playSound('irama', '4/4'); }}
-            style={{ background: "#fffbeb", padding: "1.2rem 0.5rem", borderRadius: 16, textAlign: "center", cursor: "pointer", border: activeIrama === '44' ? "2px solid #d97706" : "2px solid transparent" }}
+            onClick={() => playSound('irama', '4/4')}
+            style={{ background: "#fffbeb", padding: "1.2rem 0.5rem", borderRadius: 16, textAlign: "center", cursor: "pointer", border: activeIrama === '44' ? "2px solid #d97706" : "2px solid transparent", transition: "0.2s" }}
           >
             <div style={{ fontSize: "1.2rem", marginBottom: "4px" }}>👏👏👏👏</div>
             <b style={{ color: "#b45309", fontSize: "0.95rem", display: "block" }}>Birama 4/4</b>
@@ -1367,16 +1759,16 @@ function EksplorasiPage({ onBack }) { // <-- Ditambahkan props onBack untuk tomb
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.8rem" }}>
             {/* Lembut */}
             <div 
-              onClick={() => { setActiveDinamika('lembut'); playSound('dinamika', 'Lembut'); }}
-              style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: "1.2rem 0.5rem", borderRadius: 16, textAlign: "center", cursor: "pointer", opacity: activeDinamika && activeDinamika !== 'lembut' ? 0.6 : 1 }}
+              onClick={() => playSound('dinamika', 'Lembut')}
+              style={{ background: "#f8fafc", border: activeDinamika === 'lembut' ? "2px solid #64748b" : "2px solid #e2e8f0", padding: "1.2rem 0.5rem", borderRadius: 16, textAlign: "center", cursor: "pointer", opacity: activeDinamika && activeDinamika !== 'lembut' ? 0.6 : 1, transition: "0.2s" }}
             >
               <div style={{ fontSize: "1.6rem", marginBottom: "6px", color: "#94a3b8" }}>🔈</div>
               <b style={{ color: "#475569", fontSize: "0.95rem", display: "block" }}>Lembut</b>
             </div>
             {/* Keras */}
             <div 
-              onClick={() => { setActiveDinamika('keras'); playSound('dinamika', 'Keras'); }}
-              style={{ background: "#fff5f5", border: "1px solid #fee2e2", padding: "1.2rem 0.5rem", borderRadius: 16, textAlign: "center", cursor: "pointer", opacity: activeDinamika && activeDinamika !== 'keras' ? 0.6 : 1 }}
+              onClick={() => playSound('dinamika', 'Keras')}
+              style={{ background: "#fff5f5", border: activeDinamika === 'keras' ? "2px solid #ef4444" : "2px solid #fee2e2", padding: "1.2rem 0.5rem", borderRadius: 16, textAlign: "center", cursor: "pointer", opacity: activeDinamika && activeDinamika !== 'keras' ? 0.6 : 1, transition: "0.2s" }}
             >
               <div style={{ fontSize: "1.6rem", marginBottom: "6px", color: "#ef4444" }}>📢</div>
               <b style={{ color: "#dc2626", fontSize: "0.95rem", display: "block" }}>Keras</b>
@@ -1390,16 +1782,26 @@ function EksplorasiPage({ onBack }) { // <-- Ditambahkan props onBack untuk tomb
 }
 // ─── 4 & 10. NAVIGASI FOOTBAR DENGAN NAMA PENYELARASAN LAYOUT (POIN 4 & 10) ───
 function BottomNav({ tab, setTab }) {
-  // Hanya melacak rumpun navigasi inti sesuai penataan layar mobile viewport 450px
   const items = ["home", "materi", "latihan",  "kuis", "eksplorasi", "profil"];
 
   return (
-    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "#fff", borderTop: "1px solid #f0e8ff", display: "flex", zIndex: 99 }}>
+    <div style={{ 
+      position: "absolute", 
+      bottom: 0, 
+      left: 0, 
+      right: 0,
+     
+   
+      background: "#fff", 
+      borderTop: "1px solid #f0e8ff", 
+      display: "flex", 
+      zIndex: 99 
+    }}>
       {items.map(id => {
         const isActive = tab === id;
         return (
           <button key={id} onClick={() => setTab(id)}
-            style={{ flex: 1, padding: "0.6rem 0", border: "none", background: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, color: isActive ? "#7c3aed" : "#aaa", fontSize: "0.72rem", fontWeight: isActive ? 700 : 400 }}>
+            style={{ flex: 1, padding: "1 rem", border: "none", background: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, color: isActive ? "#7c3aed" : "#aaa", fontSize: "0.72rem", fontWeight: isActive ? 700 : 400 }}>
             <span style={{ fontSize: "1.3rem" }}>{TOOLS_CONFIG[id].icon}</span>
             {TOOLS_CONFIG[id].label}
           </button>
