@@ -303,102 +303,111 @@ export default function App() {
     return <AdminDashboard onLogout={handleLogout} />;
   }
 
-  // SCREEN SISWA BIASA (MAIN SCREEN)
-  return (
-  // SCREEN SISWA BIASA (MAIN SCREEN)
-
-    // SCREEN SISWA BIASA (MAIN SCREEN)
-
-    <div style={{ width: "100%", minHeight: "100vh", background: "#f8fafc", display: "flex", justifyContent: "center" }}>
+  // SCREEN SISWA BIASA (MAIN SCREEN)────────────────────────────────────────────────
+return (
+  <div style={{ 
+    width: "100%", 
+    minHeight: "100dvh", // 👍 Cukup gunakan 100dvh untuk handle layar HP secara dinamis
+    background: "#f8fafc", 
+    display: "flex", 
+    justifyContent: "center" 
+  }}>
+    <div style={{ 
+      width: "100%", 
+      maxWidth: "450px", 
+      height: "100dvh", // 👍 Cukup gunakan 100dvh agar mengunci pas dengan tinggi layar HP
+      background: "#fff", 
+      display: "flex", 
+      flexDirection: "column", 
+      position: "relative",
+      boxShadow: "0 0 20px rgba(0,0,0,0.05)",
+      boxSizing: "border-box" 
+    }}>
+      
+      {/* 📜 Pembungkus Konten Internal */}
       <div style={{ 
-        width: "100%", maxWidth: "450px", height: "100vh", background: "#fff", 
-        display: "flex", flexDirection: "column", position: "relative",
-        boxShadow: "0 0 20px rgba(0,0,0,0.05)",
-        paddingBottom: "0px", // ✨ Sudah 0px agar space putih hilang total
+        flex: 1, 
+        overflowY: "auto", 
+        paddingBottom: "80px", 
         boxSizing: "border-box" 
       }}>
         
-        {/* 🔥 SEKARANG DI SINI TEMPATNYA (Pembungkus Konten Internal) */}
-        <div style={{ flex: 1, overflowY: "auto", paddingBottom: "70px", boxSizing: "border-box" }}>
-          
-          {tab === "home" && (
-            <Home user={user} setTab={handleTabChange} 
-                  onOpenEksplorasi={() => setTab("eksplorasi")} 
-                  onOpenKuis={() => setTab("kuis")} 
-                  onOpenAlatMusik={() => setTab("alatmusik")}
-                  onOpenPengembang={() => setTab("pengembang")} />
-          )}
+        {tab === "home" && (
+          <Home user={user} setTab={handleTabChange} 
+                onOpenEksplorasi={() => setTab("eksplorasi")} 
+                onOpenKuis={() => setTab("kuis")} 
+                onOpenAlatMusik={() => setTab("alatmusik")}
+                onOpenPengembang={() => setTab("pengembang")} />
+        )}
 
-          {tab === "pengembang" && (
-            <ProfilPengembangPage onBack={() => setTab("home")} />
-          )}
+        {tab === "pengembang" && (
+          <ProfilPengembangPage onBack={() => setTab("home")} />
+        )}
 
-          {tab === "materi" && (
-            materiActiveId ? (
-              <MateriDetail 
-                id={materiActiveId} 
-                user={user} 
-                onBack={() => setMateriActiveId(null)}
-                onCompleteMateri={(currentId) => {
-                  const currentIdx = MATERI_LIST.findIndex(x => x.id === currentId);
-                  if (currentIdx !== -1 && currentIdx === user.progress) {
-                    updateUserProgressInDb({ progress: Math.min(user.progress + 1, MATERI_LIST.length) });
-                  }
-                  
-                  if (currentIdx !== -1 && currentIdx + 1 < MATERI_LIST.length) {
-                    setMateriActiveId(MATERI_LIST[currentIdx + 1].id);
-                    
-                    setTimeout(() => {
-                      const containers = document.querySelectorAll("div");
-                      containers.forEach((div) => {
-                        if (div.style.overflowY === "auto" || div.style.overflowY === "scroll" || div.scrollTop > 0) {
-                          div.scrollTop = 0; 
-                        }
-                      });
-                      window.scrollTo(0, 0);
-                    }, 50);
-
-                  } else {
-                    alert("Selamat! Semua bab materi telah selesai kamu pelajari! 🥳");
-                    setMateriActiveId(null);
-                  }
-                }}
-              />
-            ) : (
-              <MateriPage user={user} onOpenDetail={(id) => setMateriActiveId(id)} />
-            )
-          )}
-
-          {tab === "latihan" && (
-            latihanActiveId ? (
-              <LatihanSoalCore type={latihanActiveId} onBack={() => setLatihanActiveId(null)} />
-            ) : (
-              <LatihanPage onSelectLatihan={(id) => setLatihanActiveId(id)} />
-            )
-          )}
-
-          {tab === "profil" && <ProfilPage user={user} onLogout={handleLogout} onBack={() => setTab("home")}   />}
-          {tab === "eksplorasi" && <EksplorasiPage onBack={() => setTab("home")} />}
-          
-          {tab === "kuis" && (
-            <KuisCore 
+        {tab === "materi" && (
+          materiActiveId ? (
+            <MateriDetail 
+              id={materiActiveId} 
               user={user} 
-              onBack={() => setTab("home")} 
-              onSaveScore={(skor) => {
-                if (skor > (user?.quizBest || 0)) {
-                  updateUserProgressInDb({ quizBest: skor });
+              onBack={() => setMateriActiveId(null)}
+              onCompleteMateri={(currentId) => {
+                const currentIdx = MATERI_LIST.findIndex(x => x.id === currentId);
+                if (currentIdx !== -1 && currentIdx === user.progress) {
+                  updateUserProgressInDb({ progress: Math.min(user.progress + 1, MATERI_LIST.length) });
                 }
-              }} 
+                
+                if (currentIdx !== -1 && currentIdx + 1 < MATERI_LIST.length) {
+                  setMateriActiveId(MATERI_LIST[currentIdx + 1].id);
+                  setTimeout(() => {
+                    const containers = document.querySelectorAll("div");
+                    containers.forEach((div) => {
+                      if (div.style.overflowY === "auto" || div.style.overflowY === "scroll" || div.scrollTop > 0) {
+                        div.scrollTop = 0; 
+                      }
+                    });
+                    window.scrollTo(0, 0);
+                  }, 50);
+                } else {
+                  alert("Selamat! Semua bab materi telah selesai kamu pelajari! 🥳");
+                  setMateriActiveId(null);
+                }
+              }}
             />
-          )}
+          ) : (
+            <MateriPage user={user} onOpenDetail={(id) => setMateriActiveId(id)} onBack={() => setTab("home")} />
+          )
+        )}
 
-        </div> {/* 📌 Batas Akhir Pembungkus Konten Internal */}
+        {tab === "latihan" && (
+          latihanActiveId ? (
+            <LatihanSoalCore type={latihanActiveId} onBack={() => setLatihanActiveId(null)} />
+          ) : (
+            <LatihanPage onSelectLatihan={(id) => setLatihanActiveId(id)} onBack={() => setTab("home")} />
+          )
+        )}
 
-        {/* FOOTBAR FLOATING (Tetap di luar pembungkus scroll agar posisinya stabil) */}
-        <BottomNav tab={tab} setTab={handleTabChange} />
+        {tab === "profil" && <ProfilPage user={user} onLogout={handleLogout} onBack={() => setTab("home")} />}
+        {tab === "eksplorasi" && <EksplorasiPage onBack={() => setTab("home")} />}
+        
+        {tab === "kuis" && (
+          <KuisCore 
+            user={user} 
+            onBack={() => setTab("home")} 
+            onSaveScore={(skor) => {
+              if (skor > (user?.quizBest || 0)) {
+                updateUserProgressInDb({ quizBest: skor });
+              }
+            }} 
+          />
+        )}
+
       </div>
+
+      {/* FOOTBAR FLOATING NAVBAR */}
+      <BottomNav tab={tab} setTab={handleTabChange} />
     </div>
-  );
+  </div>
+);
 }
 
 // ─── COMPONENT 1: HEADER GLOBAL ──────────────────────────────────────────────
