@@ -1791,7 +1791,7 @@ function EksplorasiPage({ onBack }) { // <-- Ditambahkan props onBack untuk tomb
 }
 // ─── 4 & 10. NAVIGASI FOOTBAR DENGAN NAMA PENYELARASAN LAYOUT (POIN 4 & 10) ───
 function BottomNav({ tab, setTab }) {
-  const items = ["home", "materi", "latihan",  "kuis", "eksplorasi", "profil"];
+  const items = ["home", "materi", "eksplorasi", "latihan",  "kuis",  "profil"];
 
   return (
     <div style={{ 
